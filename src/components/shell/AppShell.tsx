@@ -16,6 +16,8 @@ import {
   WalletCards,
   CalendarHeart,
   Users,
+  Activity,
+  Bell,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -87,6 +89,18 @@ const navigation = [
     label: "Messages",
     href: "/chat",
     icon: MessageSquare,
+    roles: ["ADMIN", "SITE_MANAGER", "WORKER"],
+  },
+  {
+    label: "Activity",
+    href: "/activity",
+    icon: Activity,
+    roles: ["ADMIN", "SITE_MANAGER", "WORKER"],
+  },
+  {
+    label: "Notifications",
+    href: "/notifications",
+    icon: Bell,
     roles: ["ADMIN", "SITE_MANAGER", "WORKER"],
   },
 ];
