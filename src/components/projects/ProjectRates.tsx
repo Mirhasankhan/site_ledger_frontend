@@ -84,7 +84,7 @@ export default function ProjectRates({ projectId }: { projectId: string }) {
           deactivates the previous one.
         </p>
       </div>
-      <section className="card-surface rounded-lg p-5">
+      <section className="card-surface rounded-[9px] p-5">
         <form
           onSubmit={handleSubmit(onSubmit)}
           className="grid gap-4 md:grid-cols-[1.2fr_1fr_1fr_auto] md:items-end"
@@ -138,20 +138,20 @@ export default function ProjectRates({ projectId }: { projectId: string }) {
         )}
       </section>
       {isLoading ? (
-        <div className="card-surface h-44 animate-pulse rounded-lg bg-slate-100" />
+        <div className="card-surface h-44 animate-pulse rounded-[9px] bg-slate-100" />
       ) : isError ? (
-        <div className="card-surface rounded-lg p-8 text-center text-sm">
+        <div className="card-surface rounded-[9px] p-8 text-center text-sm">
           <p>Rates could not be loaded.</p>
           <button className="mt-3 btn-secondary" onClick={() => refetch()}>
             Try again
           </button>
         </div>
       ) : rates.length === 0 ? (
-        <div className="card-surface rounded-lg border-dashed p-10 text-center text-sm text-slate-500">
+        <div className="card-surface rounded-[9px] border-dashed p-10 text-center text-sm text-slate-500">
           No active rates configured.
         </div>
       ) : (
-        <div className="card-surface overflow-hidden rounded-lg">
+        <div className="card-surface overflow-hidden rounded-[9px]">
           <div className="grid grid-cols-3 border-b border-slate-200 bg-slate-50 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <span>Category</span>
             <span>Daily rate</span>

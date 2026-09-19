@@ -46,12 +46,12 @@ export default function ProjectDetails({ projectId }: { projectId: string }) {
     return (
       <div className="space-y-5">
         <div className="h-10 w-56 animate-pulse rounded bg-slate-200" />
-        <div className="h-52 animate-pulse rounded-lg bg-slate-100" />
+        <div className="h-52 animate-pulse rounded-[9px] bg-slate-100" />
       </div>
     );
   if (isError || !project)
     return (
-      <div className="card-surface rounded-lg p-8 text-center">
+      <div className="card-surface rounded-[9px] p-8 text-center">
         <AlertCircle className="mx-auto text-red-600" size={24} />
         <p className="mt-3 font-semibold">Project could not be loaded</p>
         <button className="mt-4 btn-secondary" onClick={() => refetch()}>
@@ -131,11 +131,11 @@ export default function ProjectDetails({ projectId }: { projectId: string }) {
         ))}
       </nav>
       <div className="grid gap-5 lg:grid-cols-[1.3fr_0.7fr]">
-        <section className="card-surface rounded-lg p-6">
+        <section className="card-surface rounded-[9px] p-6">
           <h2 className="text-lg font-semibold">Project brief</h2>
           <p className="mt-4 leading-7 text-slate-600">{project.description}</p>
           <div className="mt-7 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-md bg-slate-50 p-4">
+            <div className="rounded-[6px] bg-slate-50 p-4">
               <CalendarDays className="text-amber-600" size={19} />
               <p className="mt-3 text-xs text-slate-500">Schedule</p>
               <p className="mt-1 text-sm font-semibold">
@@ -148,7 +148,7 @@ export default function ProjectDetails({ projectId }: { projectId: string }) {
                   : "Not set"}
               </p>
             </div>
-            <div className="rounded-md bg-slate-50 p-4">
+            <div className="rounded-[6px] bg-slate-50 p-4">
               <Users className="text-amber-600" size={19} />
               <p className="mt-3 text-xs text-slate-500">Team size</p>
               <p className="mt-1 text-sm font-semibold">
@@ -157,7 +157,7 @@ export default function ProjectDetails({ projectId }: { projectId: string }) {
             </div>
           </div>
         </section>
-        <aside className="card-surface rounded-lg p-6">
+        <aside className="card-surface rounded-[9px] p-6">
           <p className="text-sm text-slate-500">Budget</p>
           <p className="mt-2 text-3xl font-semibold">
             {Number(project.budget || 0).toLocaleString()}

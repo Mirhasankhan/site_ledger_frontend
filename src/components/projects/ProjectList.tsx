@@ -59,12 +59,12 @@ export default function ProjectList({
           {[1, 2, 3].map((item) => (
             <div
               key={item}
-              className="card-surface h-44 animate-pulse rounded-lg bg-slate-100"
+              className="card-surface h-44 animate-pulse rounded-[9px] bg-slate-100"
             />
           ))}
         </div>
       ) : isError ? (
-        <div className="card-surface rounded-lg p-8 text-center">
+        <div className="card-surface rounded-[9px] p-8 text-center">
           <AlertCircle className="mx-auto text-red-600" size={24} />
           <p className="mt-3 font-semibold">Projects could not be loaded</p>
           <button className="mt-4 btn-secondary" onClick={() => refetch()}>
@@ -72,7 +72,7 @@ export default function ProjectList({
           </button>
         </div>
       ) : projects.length === 0 ? (
-        <div className="card-surface rounded-lg border-dashed p-12 text-center">
+        <div className="card-surface rounded-[9px] border-dashed p-12 text-center">
           <FolderKanban className="mx-auto text-slate-400" size={28} />
           <p className="mt-3 font-semibold">No projects found</p>
           <p className="mt-1 text-sm text-slate-500">
@@ -85,7 +85,7 @@ export default function ProjectList({
             <Link
               key={project.id}
               href={`${base}/projects/${project.id}`}
-              className="card-surface table-row-hover rounded-lg p-5"
+              className="card-surface table-row-hover rounded-[9px] p-5"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>

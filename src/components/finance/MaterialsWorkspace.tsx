@@ -250,11 +250,11 @@ export default function MaterialsWorkspace({
         )}
       </div>
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="card-surface rounded-lg p-5">
+        <div className="card-surface rounded-[9px] p-5">
           <p className="text-sm text-slate-500">Catalog items</p>
           <p className="mt-2 text-3xl font-semibold">{materials.length}</p>
         </div>
-        <div className="card-surface rounded-lg p-5">
+        <div className="card-surface rounded-[9px] p-5">
           <p className="text-sm text-slate-500">Low stock alerts</p>
           <p className="mt-2 text-3xl font-semibold text-amber-700">
             {
@@ -266,7 +266,7 @@ export default function MaterialsWorkspace({
             }
           </p>
         </div>
-        <div className="card-surface rounded-lg p-5">
+        <div className="card-surface rounded-[9px] p-5">
           <p className="text-sm text-slate-500">Open requests</p>
           <p className="mt-2 text-3xl font-semibold">
             {
@@ -277,7 +277,7 @@ export default function MaterialsWorkspace({
         </div>
       </div>
       {showMaterialForm && (
-        <section className="card-surface rounded-lg p-6">
+        <section className="card-surface rounded-[9px] p-6">
           <form
             onSubmit={submitMaterial(onCreateMaterial)}
             className="grid gap-4 md:grid-cols-3"
@@ -384,9 +384,9 @@ export default function MaterialsWorkspace({
       )}
       <section>
         {isLoading ? (
-          <div className="card-surface h-64 animate-pulse rounded-lg bg-slate-100" />
+          <div className="card-surface h-64 animate-pulse rounded-[9px] bg-slate-100" />
         ) : isError ? (
-          <div className="card-surface rounded-lg p-8 text-center">
+          <div className="card-surface rounded-[9px] p-8 text-center">
             <AlertCircle className="mx-auto text-red-600" size={24} />
             <p className="mt-3 font-semibold">Inventory could not be loaded</p>
             <button className="mt-4 btn-secondary" onClick={() => refetch()}>
@@ -394,12 +394,12 @@ export default function MaterialsWorkspace({
             </button>
           </div>
         ) : materials.length === 0 ? (
-          <div className="card-surface rounded-lg border-dashed p-10 text-center">
+          <div className="card-surface rounded-[9px] border-dashed p-10 text-center">
             <Boxes className="mx-auto text-slate-400" size={28} />
             <p className="mt-3 font-semibold">No materials in inventory</p>
           </div>
         ) : (
-          <div className="card-surface overflow-hidden rounded-lg">
+          <div className="card-surface overflow-hidden rounded-[9px]">
             <div className="hidden grid-cols-[1.4fr_0.8fr_0.8fr_0.8fr_1.3fr] border-b border-slate-200 bg-slate-50 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500 md:grid">
               <span>Material</span>
               <span>Category</span>
@@ -461,7 +461,7 @@ export default function MaterialsWorkspace({
           <section className="grid gap-5 lg:grid-cols-2">
             <form
               onSubmit={submitMovement(onPurchase)}
-              className="card-surface rounded-lg p-5"
+              className="card-surface rounded-[9px] p-5"
             >
               <h2 className="font-semibold">Record purchase</h2>
               <select
@@ -516,7 +516,7 @@ export default function MaterialsWorkspace({
             </form>
             <form
               onSubmit={submitMovement(onUsage)}
-              className="card-surface rounded-lg p-5"
+              className="card-surface rounded-[9px] p-5"
             >
               <h2 className="font-semibold">Log usage</h2>
               <select
@@ -573,7 +573,7 @@ export default function MaterialsWorkspace({
               </button>
             </form>
           </section>
-          <section className="card-surface rounded-lg p-5">
+          <section className="card-surface rounded-[9px] p-5">
             <h2 className="font-semibold">Request material for a project</h2>
             <form
               onSubmit={submitRequest(onRequest)}
@@ -625,7 +625,7 @@ export default function MaterialsWorkspace({
               </p>
             )}
           </section>
-          <section className="card-surface overflow-hidden rounded-lg">
+          <section className="card-surface overflow-hidden rounded-[9px]">
             <div className="border-b border-slate-200 px-5 py-4">
               <h2 className="font-semibold">Material requests</h2>
             </div>

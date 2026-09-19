@@ -180,7 +180,7 @@ export default function ChatWorkspace({
                 } catch (error) {
                   setActionError(
                     (error as { data?: { message?: string } })?.data?.message ||
-                      "Conversation could not be opened.",
+                    "Conversation could not be opened.",
                   );
                 }
               }}
@@ -196,11 +196,11 @@ export default function ChatWorkspace({
         </div>
       )}
       {actionError && (
-        <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-[6px] bg-red-50 px-4 py-3 text-sm text-red-700">
           {actionError}
         </div>
       )}
-      <section className="card-surface flex min-h-[28rem] flex-col overflow-hidden rounded-lg">
+      <section className="card-surface flex min-h-[28rem] flex-col overflow-hidden rounded-[9px]">
         <div className="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-5">
           {(mode === "project" ? projectLoading : roomLoading) ? (
             <div className="h-32 animate-pulse rounded bg-slate-200" />
@@ -222,7 +222,7 @@ export default function ChatWorkspace({
             messages.map((message: any) => (
               <div
                 key={message.id}
-                className={`max-w-xl rounded-lg border border-slate-200 bg-white p-3 shadow-sm ${message.isSystem ? "border-amber-200 bg-amber-50" : ""}`}
+                className={`max-w-xl rounded-[9px] border border-slate-200 bg-white p-3 shadow-sm ${message.isSystem ? "border-amber-200 bg-amber-50" : ""}`}
               >
                 <p className="text-sm leading-6">{message.content}</p>
                 <p className="mt-1 text-[11px] text-slate-400">

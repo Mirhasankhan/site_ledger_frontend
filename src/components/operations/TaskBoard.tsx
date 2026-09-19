@@ -70,12 +70,12 @@ export default function TaskBoard({
       </div>
       {isLoading ? (
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="card-surface h-64 animate-pulse rounded-lg bg-slate-100" />
-          <div className="card-surface h-64 animate-pulse rounded-lg bg-slate-100" />
-          <div className="card-surface h-64 animate-pulse rounded-lg bg-slate-100" />
+          <div className="card-surface h-64 animate-pulse rounded-[9px] bg-slate-100" />
+          <div className="card-surface h-64 animate-pulse rounded-[9px] bg-slate-100" />
+          <div className="card-surface h-64 animate-pulse rounded-[9px] bg-slate-100" />
         </div>
       ) : isError ? (
-        <div className="card-surface rounded-lg p-8 text-center">
+        <div className="card-surface rounded-[9px] p-8 text-center">
           <AlertCircle className="mx-auto text-red-600" size={24} />
           <p className="mt-3 font-semibold">Tasks could not be loaded</p>
           <button className="mt-4 btn-secondary" onClick={() => refetch()}>
@@ -84,11 +84,11 @@ export default function TaskBoard({
           </button>
         </div>
       ) : list.length === 0 ? (
-        <div className="card-surface rounded-lg border-dashed p-10 text-center text-sm text-slate-500">
+        <div className="card-surface rounded-[9px] border-dashed p-10 text-center text-sm text-slate-500">
           No tasks found in your project scope.
         </div>
       ) : mode === "list" ? (
-        <div className="card-surface overflow-hidden rounded-lg">
+        <div className="card-surface overflow-hidden rounded-[9px]">
           <div className="grid grid-cols-[1.5fr_1fr_1fr_0.7fr] border-b border-slate-200 bg-slate-50 px-5 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <span>Task</span>
             <span>Status</span>
@@ -133,7 +133,7 @@ export default function TaskBoard({
             return (
               <section
                 key={column}
-                className="min-h-64 rounded-lg border border-slate-200 bg-slate-100/70 p-3"
+                className="min-h-64 rounded-[9px] border border-slate-200 bg-slate-100/70 p-3"
               >
                 <div className="mb-3 flex items-center justify-between px-1">
                   <h2 className="text-sm font-semibold">{labels[column]}</h2>
@@ -145,7 +145,7 @@ export default function TaskBoard({
                   {items.map((task: any) => (
                     <article
                       key={task.id}
-                      className="rounded-md border border-slate-200 bg-white p-4 shadow-sm"
+                      className="rounded-[6px] border border-slate-200 bg-white p-4 shadow-sm"
                     >
                       <p className="font-semibold">{task.title}</p>
                       <p className="mt-2 text-xs text-slate-500">

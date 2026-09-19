@@ -142,14 +142,14 @@ export default function AttendanceWorkspace({
           </p>
         </div>
         {projectsLoading ? (
-          <div className="card-surface h-32 animate-pulse rounded-lg bg-slate-100" />
+          <div className="card-surface h-32 animate-pulse rounded-[9px] bg-slate-100" />
         ) : !activeProjectId ? (
-          <div className="card-surface rounded-lg border-dashed p-10 text-center text-sm text-slate-500">
+          <div className="card-surface rounded-[9px] border-dashed p-10 text-center text-sm text-slate-500">
             You are not assigned to a project yet.
           </div>
         ) : (
           <>
-            <div className="card-surface rounded-lg p-5">
+            <div className="card-surface rounded-[9px] p-5">
               <p className="text-sm text-slate-500">Assigned project</p>
               <p className="mt-1 text-lg font-semibold">
                 {selectedProject.projectName}
@@ -157,7 +157,7 @@ export default function AttendanceWorkspace({
             </div>
             <form
               onSubmit={handleSubmit(submitSelf)}
-              className="card-surface max-w-2xl rounded-lg p-6"
+              className="card-surface max-w-2xl rounded-[9px] p-6"
             >
               <div className="grid gap-5 sm:grid-cols-2">
                 <div>
@@ -274,14 +274,14 @@ export default function AttendanceWorkspace({
         </div>
       </div>
       {actionError && (
-        <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-[6px] bg-red-50 px-4 py-3 text-sm text-red-700">
           {actionError}
         </div>
       )}
       {workersLoading || attendanceLoading ? (
-        <div className="card-surface h-64 animate-pulse rounded-lg bg-slate-100" />
+        <div className="card-surface h-64 animate-pulse rounded-[9px] bg-slate-100" />
       ) : workersError || attendanceError ? (
-        <div className="card-surface rounded-lg p-8 text-center">
+        <div className="card-surface rounded-[9px] p-8 text-center">
           <AlertCircle className="mx-auto text-red-600" size={24} />
           <p className="mt-3 font-semibold">
             Attendance data could not be loaded
@@ -291,11 +291,11 @@ export default function AttendanceWorkspace({
           </button>
         </div>
       ) : !activeProjectId ? (
-        <div className="card-surface rounded-lg border-dashed p-10 text-center text-sm text-slate-500">
+        <div className="card-surface rounded-[9px] border-dashed p-10 text-center text-sm text-slate-500">
           Select a project to continue.
         </div>
       ) : view === "mark" ? (
-        <section className="card-surface overflow-hidden rounded-lg">
+        <section className="card-surface overflow-hidden rounded-[9px]">
           <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
             <div>
               <h2 className="font-semibold">Daily attendance</h2>
@@ -362,7 +362,7 @@ export default function AttendanceWorkspace({
           )}
         </section>
       ) : (
-        <section className="card-surface overflow-hidden rounded-lg">
+        <section className="card-surface overflow-hidden rounded-[9px]">
           <div className="border-b border-slate-200 px-5 py-4">
             <h2 className="font-semibold">Pending verification</h2>
             <p className="text-xs text-slate-500">

@@ -19,13 +19,13 @@ export default function EditProjectPage({ projectId }: { projectId: string }) {
           </h1>
         </div>
         {isLoading ? (
-          <div className="card-surface h-96 animate-pulse rounded-lg bg-slate-100" />
+          <div className="card-surface h-96 animate-pulse rounded-[9px] bg-slate-100" />
         ) : isError || !project ? (
-          <div className="card-surface rounded-lg p-8 text-center text-red-700">
+          <div className="card-surface rounded-[9px] p-8 text-center text-red-700">
             Project could not be loaded.
           </div>
         ) : (
-          <div className="card-surface rounded-lg p-6 sm:p-8">
+          <div className="card-surface rounded-[9px] p-6 sm:p-8">
             <ProjectForm project={project} />
           </div>
         )}

@@ -54,7 +54,7 @@ export default function ProjectWorkers({ projectId }: { projectId: string }) {
         <p className="text-sm text-slate-500">Project team</p>
         <h2 className="mt-1 text-2xl font-semibold">Workers</h2>
       </div>
-      <section className="card-surface rounded-lg p-5">
+      <section className="card-surface rounded-[9px] p-5">
         <div className="flex flex-col gap-3 sm:flex-row">
           <select
             className="form-input"
@@ -83,9 +83,9 @@ export default function ProjectWorkers({ projectId }: { projectId: string }) {
         </p>
       </section>
       {isLoading ? (
-        <div className="card-surface h-48 animate-pulse rounded-lg bg-slate-100" />
+        <div className="card-surface h-48 animate-pulse rounded-[9px] bg-slate-100" />
       ) : isError ? (
-        <div className="card-surface rounded-lg p-8 text-center">
+        <div className="card-surface rounded-[9px] p-8 text-center">
           <AlertCircle className="mx-auto text-red-600" size={24} />
           <p className="mt-3 font-semibold">Workers could not be loaded</p>
           <button className="mt-4 btn-secondary" onClick={() => refetch()}>
@@ -93,11 +93,11 @@ export default function ProjectWorkers({ projectId }: { projectId: string }) {
           </button>
         </div>
       ) : assigned.length === 0 ? (
-        <div className="card-surface rounded-lg border-dashed p-10 text-center text-sm text-slate-500">
+        <div className="card-surface rounded-[9px] border-dashed p-10 text-center text-sm text-slate-500">
           No workers are assigned to this project.
         </div>
       ) : (
-        <div className="card-surface overflow-hidden rounded-lg">
+        <div className="card-surface overflow-hidden rounded-[9px]">
           <div className="divide-y divide-slate-100">
             {assigned.map((worker: any) => {
               const locked = Number(worker.outstandingAmount || 0) > 0;

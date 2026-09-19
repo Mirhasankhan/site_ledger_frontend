@@ -60,7 +60,7 @@ export default function RoleOverview({ role }: { role: keyof typeof content }) {
         </Link>
       </div>
       <div className="grid gap-4 md:grid-cols-3">
-        <div className="card-surface rounded-lg p-5">
+        <div className="card-surface rounded-[9px] p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm text-slate-500">{item.metricLabel}</p>
             <FolderKanban className="text-amber-600" size={19} />
@@ -68,7 +68,7 @@ export default function RoleOverview({ role }: { role: keyof typeof content }) {
           <p className="mt-4 text-3xl font-semibold">{item.metric}</p>
           <p className="mt-1 text-xs text-slate-500">Current workspace scope</p>
         </div>
-        <div className="card-surface rounded-lg p-5">
+        <div className="card-surface rounded-[9px] p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm text-slate-500">Today&apos;s status</p>
             <CheckCircle2 className="text-green-600" size={19} />
@@ -76,7 +76,7 @@ export default function RoleOverview({ role }: { role: keyof typeof content }) {
           <p className="mt-4 text-3xl font-semibold">On track</p>
           <p className="mt-1 text-xs text-slate-500">No urgent exceptions</p>
         </div>
-        <div className="card-surface rounded-lg p-5">
+        <div className="card-surface rounded-[9px] p-5">
           <div className="flex items-center justify-between">
             <p className="text-sm text-slate-500">Recent activity</p>
             <Clock3 className="text-blue-600" size={19} />
@@ -87,7 +87,7 @@ export default function RoleOverview({ role }: { role: keyof typeof content }) {
           </p>
         </div>
       </div>
-      <section className="card-surface rounded-lg p-6">
+      <section className="card-surface rounded-[9px] p-6">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-semibold">Recent activity</h2>
@@ -97,7 +97,7 @@ export default function RoleOverview({ role }: { role: keyof typeof content }) {
           </div>
           <ArrowUpRight className="text-slate-400" size={20} />
         </div>
-        <div className="mt-8 rounded-md border border-dashed border-slate-300 px-5 py-10 text-center text-sm text-slate-500">
+        <div className="mt-8 rounded-[6px] border border-dashed border-slate-300 px-5 py-10 text-center text-sm text-slate-500">
           No recent activity to show.
         </div>
       </section>

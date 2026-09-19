@@ -50,7 +50,7 @@ export default function ResetPasswordPage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-950 px-5 py-10">
       <section className="card-surface w-full max-w-md rounded-xl p-7 sm:p-9">
-        <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+        <div className="mb-6 flex h-11 w-11 items-center justify-center rounded-[9px] bg-amber-100 text-amber-700">
           <KeyRound size={21} />
         </div>
         <h1 className="text-3xl font-semibold tracking-tight">
@@ -89,7 +89,7 @@ export default function ResetPasswordPage() {
             )}
           </div>
           {errors.root && (
-            <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+            <p className="rounded-[6px] bg-red-50 px-3 py-2 text-sm text-red-700">
               {errors.root.message}
             </p>
           )}

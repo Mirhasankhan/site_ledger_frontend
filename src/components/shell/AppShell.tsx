@@ -172,7 +172,7 @@ export default function AppShell({
                     key={item.label}
                     href={href}
                     onClick={() => setMobileOpen(false)}
-                    className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition ${active ? "bg-amber-500 text-white" : "hover:bg-white/10 hover:text-white"}`}
+                    className={`flex items-center gap-3 rounded-[6px] px-3 py-2.5 text-sm transition ${active ? "bg-amber-500 text-white" : "hover:bg-white/10 hover:text-white"}`}
                   >
                     <Icon size={17} />
                     {item.label}
@@ -184,7 +184,7 @@ export default function AppShell({
         <div className="absolute bottom-5 left-4 right-4 border-t border-white/10 pt-4">
           <button
             onClick={signOut}
-            className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm text-slate-400 transition hover:bg-red-500/10 hover:text-red-300"
+            className="flex w-full items-center gap-3 rounded-[6px] px-3 py-2.5 text-sm text-slate-400 transition hover:bg-red-500/10 hover:text-red-300"
           >
             <LogOut size={17} />
             Sign out

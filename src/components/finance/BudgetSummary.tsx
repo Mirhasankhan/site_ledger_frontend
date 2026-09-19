@@ -14,11 +14,11 @@ export default function BudgetSummary({ projectId }: { projectId: string }) {
   const summary = data?.data;
   if (isLoading)
     return (
-      <div className="card-surface h-36 animate-pulse rounded-lg bg-slate-100" />
+      <div className="card-surface h-36 animate-pulse rounded-[9px] bg-slate-100" />
     );
   if (isError || !summary)
     return (
-      <div className="card-surface rounded-lg p-5 text-sm">
+      <div className="card-surface rounded-[9px] p-5 text-sm">
         <div className="flex items-center gap-2 text-red-700">
           <AlertCircle size={17} />
           Budget summary unavailable
@@ -32,7 +32,7 @@ export default function BudgetSummary({ projectId }: { projectId: string }) {
   const spent = Number(summary.spent ?? summary.totalSpent ?? 0);
   const remaining = Number(summary.remaining ?? budget - spent);
   return (
-    <section className="card-surface rounded-lg p-6">
+    <section className="card-surface rounded-[9px] p-6">
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm text-slate-500">Budget summary</p>

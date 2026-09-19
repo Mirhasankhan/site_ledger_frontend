@@ -84,7 +84,7 @@ export default function AcceptInvitePage() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-950 px-5 py-10">
       <section className="card-surface w-full max-w-lg rounded-xl p-7 sm:p-9">
-        <div className="mb-7 flex h-11 w-11 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+        <div className="mb-7 flex h-11 w-11 items-center justify-center rounded-[9px] bg-amber-100 text-amber-700">
           <ShieldCheck size={22} />
         </div>
         <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-600">
@@ -99,7 +99,7 @@ export default function AcceptInvitePage() {
             Verifying your invitation...
           </div>
         ) : isError || !invite ? (
-          <div className="mt-6 rounded-md bg-red-50 p-4 text-sm text-red-700">
+          <div className="mt-6 rounded-[6px] bg-red-50 p-4 text-sm text-red-700">
             {errorMessage}
           </div>
         ) : (
@@ -182,7 +182,7 @@ export default function AcceptInvitePage() {
                 )}
               </div>
               {errors.root && (
-                <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+                <p className="rounded-[6px] bg-red-50 px-3 py-2 text-sm text-red-700">
                   {errors.root.message}
                 </p>
               )}

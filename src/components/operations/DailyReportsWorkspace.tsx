@@ -134,7 +134,7 @@ export default function DailyReportsWorkspace({
         )}
       </div>
       {showForm && (
-        <section className="card-surface rounded-lg p-6">
+        <section className="card-surface rounded-[9px] p-6">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="grid gap-4 md:grid-cols-3">
               <div>
@@ -260,9 +260,9 @@ export default function DailyReportsWorkspace({
         </select>
       </div>
       {isLoading ? (
-        <div className="card-surface h-56 animate-pulse rounded-lg bg-slate-100" />
+        <div className="card-surface h-56 animate-pulse rounded-[9px] bg-slate-100" />
       ) : isError ? (
-        <div className="card-surface rounded-lg p-8 text-center">
+        <div className="card-surface rounded-[9px] p-8 text-center">
           <AlertCircle className="mx-auto text-red-600" size={24} />
           <p className="mt-3 font-semibold">Reports could not be loaded</p>
           <button className="mt-4 btn-secondary" onClick={() => refetch()}>
@@ -270,7 +270,7 @@ export default function DailyReportsWorkspace({
           </button>
         </div>
       ) : reports.length === 0 ? (
-        <div className="card-surface rounded-lg border-dashed p-10 text-center">
+        <div className="card-surface rounded-[9px] border-dashed p-10 text-center">
           <FileText className="mx-auto text-slate-400" size={28} />
           <p className="mt-3 font-semibold">No daily reports</p>
           <p className="mt-1 text-sm text-slate-500">
@@ -280,7 +280,7 @@ export default function DailyReportsWorkspace({
       ) : (
         <div className="grid gap-4 lg:grid-cols-2">
           {reports.map((report: any) => (
-            <article key={report.id} className="card-surface rounded-lg p-5">
+            <article key={report.id} className="card-surface rounded-[9px] p-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-wide text-amber-600">

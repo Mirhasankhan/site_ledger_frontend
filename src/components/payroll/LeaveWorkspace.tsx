@@ -108,7 +108,7 @@ export default function LeaveWorkspace({
         </button>
       </div>
       {showForm && (
-        <section className="card-surface rounded-lg p-6">
+        <section className="card-surface rounded-[9px] p-6">
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="grid gap-4 md:grid-cols-3"
@@ -244,14 +244,14 @@ export default function LeaveWorkspace({
         </select>
       </div>
       {actionError && (
-        <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-700">
+        <div className="rounded-[6px] bg-red-50 px-4 py-3 text-sm text-red-700">
           {actionError}
         </div>
       )}
       {isLoading ? (
-        <div className="card-surface h-56 animate-pulse rounded-lg bg-slate-100" />
+        <div className="card-surface h-56 animate-pulse rounded-[9px] bg-slate-100" />
       ) : isError ? (
-        <div className="card-surface rounded-lg p-8 text-center">
+        <div className="card-surface rounded-[9px] p-8 text-center">
           <AlertCircle className="mx-auto text-red-600" size={24} />
           <p className="mt-3 font-semibold">
             Leave requests could not be loaded
@@ -261,7 +261,7 @@ export default function LeaveWorkspace({
           </button>
         </div>
       ) : leaves.length === 0 ? (
-        <div className="card-surface rounded-lg border-dashed p-10 text-center">
+        <div className="card-surface rounded-[9px] border-dashed p-10 text-center">
           <CalendarDays className="mx-auto text-slate-400" size={28} />
           <p className="mt-3 font-semibold">No leave requests</p>
           <p className="mt-1 text-sm text-slate-500">
@@ -269,7 +269,7 @@ export default function LeaveWorkspace({
           </p>
         </div>
       ) : (
-        <div className="card-surface overflow-hidden rounded-lg">
+        <div className="card-surface overflow-hidden rounded-[9px]">
           <div className="divide-y divide-slate-100">
             {leaves.map((leave: any) => (
               <div

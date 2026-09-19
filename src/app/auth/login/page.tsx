@@ -74,7 +74,7 @@ export default function LoginPage() {
         </section>
         <section className="card-surface mx-auto w-full max-w-md rounded-xl p-7 sm:p-9">
           <div className="mb-8">
-            <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
+            <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-[9px] bg-amber-100 text-amber-700">
               <LockKeyhole size={21} />
             </div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-600">
@@ -118,7 +118,7 @@ export default function LoginPage() {
               )}
             </div>
             {errors.root && (
-              <p className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">
+              <p className="rounded-[6px] bg-red-50 px-3 py-2 text-sm text-red-700">
                 {errors.root.message}
               </p>
             )}

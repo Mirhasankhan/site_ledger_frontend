@@ -156,24 +156,24 @@ export default function PaymentsWorkspace({
         )}
       </div>
       {!canRecord && earningsLoading ? (
-        <div className="card-surface h-32 animate-pulse rounded-lg bg-slate-100" />
+        <div className="card-surface h-32 animate-pulse rounded-[9px] bg-slate-100" />
       ) : (
         <div className="grid gap-4 md:grid-cols-3">
-          <div className="card-surface rounded-lg p-5">
+          <div className="card-surface rounded-[9px] p-5">
             <Wallet className="text-amber-600" size={19} />
             <p className="mt-3 text-sm text-slate-500">Current earnings</p>
             <p className="mt-1 text-2xl font-semibold">
               {earnings?.currentEarnings ?? ownWorker?.currentEarnings ?? 0}
             </p>
           </div>
-          <div className="card-surface rounded-lg p-5">
+          <div className="card-surface rounded-[9px] p-5">
             <CircleDollarSign className="text-green-600" size={19} />
             <p className="mt-3 text-sm text-slate-500">All-time earnings</p>
             <p className="mt-1 text-2xl font-semibold">
               {earnings?.allTimeEarnings ?? ownWorker?.allTimeEarnings ?? 0}
             </p>
           </div>
-          <div className="card-surface rounded-lg p-5">
+          <div className="card-surface rounded-[9px] p-5">
             <Banknote className="text-red-600" size={19} />
             <p className="mt-3 text-sm text-slate-500">Outstanding balance</p>
             <p className="mt-1 text-2xl font-semibold text-red-700">
@@ -183,7 +183,7 @@ export default function PaymentsWorkspace({
         </div>
       )}
       {showForm && (
-        <section className="card-surface rounded-lg p-6">
+        <section className="card-surface rounded-[9px] p-6">
           <form
             onSubmit={handleSubmit(onSubmit)}
             className="grid gap-4 md:grid-cols-3"
@@ -319,9 +319,9 @@ export default function PaymentsWorkspace({
         </div>
       )}
       {isLoading ? (
-        <div className="card-surface h-56 animate-pulse rounded-lg bg-slate-100" />
+        <div className="card-surface h-56 animate-pulse rounded-[9px] bg-slate-100" />
       ) : isError ? (
-        <div className="card-surface rounded-lg p-8 text-center">
+        <div className="card-surface rounded-[9px] p-8 text-center">
           <AlertCircle className="mx-auto text-red-600" size={24} />
           <p className="mt-3 font-semibold">Payments could not be loaded</p>
           <button className="mt-4 btn-secondary" onClick={() => refetch()}>
@@ -329,11 +329,11 @@ export default function PaymentsWorkspace({
           </button>
         </div>
       ) : payments.length === 0 ? (
-        <div className="card-surface rounded-lg border-dashed p-10 text-center text-sm text-slate-500">
+        <div className="card-surface rounded-[9px] border-dashed p-10 text-center text-sm text-slate-500">
           No payments found.
         </div>
       ) : (
-        <div className="card-surface overflow-hidden rounded-lg">
+        <div className="card-surface overflow-hidden rounded-[9px]">
           <div className="divide-y divide-slate-100">
             {payments.map((payment: any) => (
               <div

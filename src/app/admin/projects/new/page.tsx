@@ -12,7 +12,7 @@ export default function NewProjectPage() {
             Create a project
           </h1>
         </div>
-        <div className="card-surface rounded-lg p-6 sm:p-8">
+        <div className="card-surface rounded-[9px] p-6 sm:p-8">
           <ProjectForm />
         </div>
       </div>

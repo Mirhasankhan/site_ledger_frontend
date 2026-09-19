@@ -94,7 +94,7 @@ export default function ProjectTasks({ projectId }: { projectId: string }) {
         </button>
       </div>
       {showForm && (
-        <section className="card-surface rounded-lg p-5">
+        <section className="card-surface rounded-[9px] p-5">
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="grid gap-4 md:grid-cols-2">
               <div>
@@ -173,9 +173,9 @@ export default function ProjectTasks({ projectId }: { projectId: string }) {
         </section>
       )}
       {isLoading ? (
-        <div className="card-surface h-48 animate-pulse rounded-lg bg-slate-100" />
+        <div className="card-surface h-48 animate-pulse rounded-[9px] bg-slate-100" />
       ) : isError ? (
-        <div className="card-surface rounded-lg p-8 text-center">
+        <div className="card-surface rounded-[9px] p-8 text-center">
           <AlertCircle className="mx-auto text-red-600" size={24} />
           <p className="mt-3 font-semibold">Tasks could not be loaded</p>
           <button className="mt-4 btn-secondary" onClick={() => refetch()}>
@@ -183,13 +183,13 @@ export default function ProjectTasks({ projectId }: { projectId: string }) {
           </button>
         </div>
       ) : tasks.length === 0 ? (
-        <div className="card-surface rounded-lg border-dashed p-10 text-center text-sm text-slate-500">
+        <div className="card-surface rounded-[9px] border-dashed p-10 text-center text-sm text-slate-500">
           No tasks in this project.
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {tasks.map((task: any) => (
-            <div key={task.id} className="card-surface rounded-lg p-5">
+            <div key={task.id} className="card-surface rounded-[9px] p-5">
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold">{task.title}</p>
