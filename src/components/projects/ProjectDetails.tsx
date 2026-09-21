@@ -131,10 +131,21 @@ export default function ProjectDetails({ projectId }: { projectId: string }) {
         ))}
       </nav>
       <div className="grid gap-5 lg:grid-cols-[1.3fr_0.7fr]">
-        <section className="card-surface rounded-[9px] p-6">
-          <h2 className="text-lg font-semibold">Project brief</h2>
-          <p className="mt-4 leading-7 text-slate-600">{project.description}</p>
-          <div className="mt-7 grid gap-4 sm:grid-cols-2">
+        <section className="card-surface rounded-[9px] overflow-hidden">
+          {project.projectImage && (
+            <div className="relative h-60 w-full overflow-hidden bg-slate-900 border-b border-slate-200">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={project.projectImage}
+                alt={project.projectName}
+                className="h-full w-full object-cover"
+              />
+            </div>
+          )}
+          <div className="p-6">
+            <h2 className="text-lg font-semibold">Project brief</h2>
+            <p className="mt-4 leading-7 text-slate-600">{project.description}</p>
+            <div className="mt-7 grid gap-4 sm:grid-cols-2">
             <div className="rounded-[6px] bg-slate-50 p-4">
               <CalendarDays className="text-amber-600" size={19} />
               <p className="mt-3 text-xs text-slate-500">Schedule</p>
@@ -155,6 +166,7 @@ export default function ProjectDetails({ projectId }: { projectId: string }) {
                 {project._count?.workerProfiles ?? 0} assigned workers
               </p>
             </div>
+          </div>
           </div>
         </section>
         <aside className="card-surface rounded-[9px] p-6">

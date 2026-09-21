@@ -14,13 +14,13 @@ const projectApi = baseApi.injectEndpoints({
       query: (id) => `/projects/${id}/budget-summary`,
       providesTags: (_result, _error, id) => [{ type: "budget", id }],
     }),
-    createProject: builder.mutation<any, Record<string, unknown>>({
+    createProject: builder.mutation<any, FormData | Record<string, unknown>>({
       query: (body) => ({ url: "/projects", method: "POST", body }),
       invalidatesTags: ["projects"],
     }),
     updateProject: builder.mutation<
       any,
-      { id: string; body: Record<string, unknown> }
+      { id: string; body: FormData | Record<string, unknown> }
     >({
       query: ({ id, body }) => ({
         url: `/projects/${id}`,
@@ -28,6 +28,10 @@ const projectApi = baseApi.injectEndpoints({
         body,
       }),
       invalidatesTags: ["projects"],
+    }),
+    listSiteManagers: builder.query<any, void>({
+      query: () => "/projects/site-managers",
+      providesTags: ["users"],
     }),
     deleteProject: builder.mutation<any, string>({
       query: (id) => ({ url: `/projects/${id}`, method: "DELETE" }),
@@ -111,6 +115,7 @@ export const {
   useCreateProjectMutation,
   useUpdateProjectMutation,
   useDeleteProjectMutation,
+  useListSiteManagersQuery,
   useGetProjectRatesQuery,
   useCreateProjectRateMutation,
   useListWorkersQuery,

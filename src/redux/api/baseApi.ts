@@ -27,6 +27,7 @@ export const baseApi = createApi({
     "leave",
     "chat",
     "activity",
+    "invites",
   ],
   endpoints: () => ({}),
 });

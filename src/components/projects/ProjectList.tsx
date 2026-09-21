@@ -85,25 +85,39 @@ export default function ProjectList({
             <Link
               key={project.id}
               href={`${base}/projects/${project.id}`}
-              className="card-surface table-row-hover rounded-[9px] p-5"
+              className="card-surface table-row-hover overflow-hidden rounded-[9px] flex flex-col transition-shadow hover:shadow-md"
             >
-              <div className="flex items-start justify-between gap-3">
+              {project.projectImage && (
+                <div className="h-40 w-full overflow-hidden bg-slate-900 border-b border-slate-100">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={project.projectImage}
+                    alt={project.projectName}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              )}
+              <div className="p-5 flex-1 flex flex-col justify-between">
                 <div>
-                  <p className="text-lg font-semibold">{project.projectName}</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {project.projectCode || "No project code"}
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-lg font-semibold">{project.projectName}</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {project.projectCode || "No project code"}
+                      </p>
+                    </div>
+                    <span className="status-badge bg-amber-100 text-amber-800">
+                      {project.status}
+                    </span>
+                  </div>
+                  <p className="mt-4 line-clamp-2 text-sm text-slate-600">
+                    {project.description}
                   </p>
                 </div>
-                <span className="status-badge bg-amber-100 text-amber-800">
-                  {project.status}
-                </span>
-              </div>
-              <p className="mt-5 line-clamp-2 text-sm text-slate-600">
-                {project.description}
-              </p>
-              <div className="mt-5 flex gap-5 text-xs text-slate-500">
-                <span>{project._count?.workerProfiles ?? 0} workers</span>
-                <span>{project._count?.tasks ?? 0} tasks</span>
+                <div className="mt-5 flex gap-5 text-xs text-slate-500 border-t border-slate-100 pt-3">
+                  <span>{project._count?.workerProfiles ?? 0} workers</span>
+                  <span>{project._count?.tasks ?? 0} tasks</span>
+                </div>
               </div>
             </Link>
           ))}

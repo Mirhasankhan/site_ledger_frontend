@@ -6,10 +6,12 @@ const financeApi = baseApi.injectEndpoints({
       query: (params = "") => `/expenses${params ? `?${params}` : ""}`,
       providesTags: ["expenses"],
     }),
+
     createExpense: builder.mutation<any, Record<string, unknown>>({
       query: (body) => ({ url: "/expenses", method: "POST", body }),
       invalidatesTags: ["expenses", "budget"],
     }),
+
     reviewExpense: builder.mutation<
       any,
       { id: string; body: Record<string, unknown> }
@@ -21,6 +23,7 @@ const financeApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["expenses", "budget"],
     }),
+
     updateExpense: builder.mutation<
       any,
       { id: string; body: Record<string, unknown> }
@@ -32,6 +35,7 @@ const financeApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["expenses", "budget"],
     }),
+
     deleteExpense: builder.mutation<any, string>({
       query: (id) => ({ url: `/expenses/${id}`, method: "DELETE" }),
       invalidatesTags: ["expenses", "budget"],
@@ -40,10 +44,12 @@ const financeApi = baseApi.injectEndpoints({
       query: (params = "") => `/materials${params ? `?${params}` : ""}`,
       providesTags: ["materials"],
     }),
+
     createMaterial: builder.mutation<any, Record<string, unknown>>({
       query: (body) => ({ url: "/materials", method: "POST", body }),
       invalidatesTags: ["materials"],
     }),
+
     updateMaterial: builder.mutation<
       any,
       { id: string; body: Record<string, unknown> }
@@ -55,6 +61,7 @@ const financeApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["materials"],
     }),
+
     createMaterialPurchase: builder.mutation<
       any,
       { id: string; body: Record<string, unknown> }
@@ -66,6 +73,7 @@ const financeApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["materials"],
     }),
+
     createMaterialUsage: builder.mutation<
       any,
       { id: string; body: Record<string, unknown> }
@@ -77,15 +85,18 @@ const financeApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["materials", "budget"],
     }),
+
     listMaterialRequests: builder.query<any, string | void>({
       query: (params = "") =>
         `/materials/requests${params ? `?${params}` : ""}`,
       providesTags: ["materials"],
     }),
+
     createMaterialRequest: builder.mutation<any, Record<string, unknown>>({
       query: (body) => ({ url: "/materials/requests", method: "POST", body }),
       invalidatesTags: ["materials"],
     }),
+
     reviewMaterialRequest: builder.mutation<
       any,
       { id: string; body: Record<string, unknown> }

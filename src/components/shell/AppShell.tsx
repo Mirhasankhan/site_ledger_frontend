@@ -57,7 +57,7 @@ const navigation = [
   },
   {
     label: "People",
-    href: "/workers",
+    href: "/people",
     icon: Users,
     roles: ["ADMIN", "SITE_MANAGER"],
   },
@@ -165,7 +165,9 @@ export default function AppShell({
               .filter((item) => item.roles.includes(role))
               .map((item) => {
                 const href = `${base}${item.href}`;
-                const active = pathname === href;
+                const active =
+                  pathname === href ||
+                  (item.href === "/people" && pathname === `${base}/workers`);
                 const Icon = item.icon;
                 return (
                   <Link
