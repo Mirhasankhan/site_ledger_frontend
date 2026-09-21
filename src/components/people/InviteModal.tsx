@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, Mail, UserPlus } from "lucide-react";
+import { CheckCircle2, Mail, Send, UserPlus } from "lucide-react";
 import { toast } from "react-toastify";
 import {
   Dialog,
@@ -34,12 +34,10 @@ export default function InviteModal({ isOpen, onClose }: InviteModalProps) {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState<"WORKER" | "SITE_MANAGER" | "ADMIN">("WORKER");
   const [workerCategory, setWorkerCategory] = useState<string>("Mason");
-  const [copied, setCopied] = useState(false);
   const [createdInvite, setCreatedInvite] = useState<{
     email: string;
-    token: string;
     role: string;
-    expiresAt: string;
+    expiresAt?: string;
   } | null>(null);
 
   const [createInvite, { isLoading }] = useCreateInviteMutation();
@@ -49,7 +47,6 @@ export default function InviteModal({ isOpen, onClose }: InviteModalProps) {
     setRole("WORKER");
     setWorkerCategory("Mason");
     setCreatedInvite(null);
-    setCopied(false);
   };
 
   const handleClose = () => {
@@ -79,33 +76,16 @@ export default function InviteModal({ isOpen, onClose }: InviteModalProps) {
       }
 
       const res = await createInvite(payload).unwrap();
-      toast.success(res.message || "Invitation created successfully");
+      toast.success(res.message || "Invitation email sent successfully");
       setCreatedInvite({
-        email: res.data.email,
-        token: res.data.token,
-        role: res.data.role,
-        expiresAt: res.data.expiresAt,
+        email: res.data?.email || payload.email,
+        role: res.data?.role || payload.role,
+        expiresAt: res.data?.expiresAt,
       });
     } catch (err: any) {
       toast.error(
         err?.data?.message || err?.message || "Failed to create invitation",
       );
-    }
-  };
-
-  const inviteLink = createdInvite
-    ? `${typeof window !== "undefined" ? window.location.origin : ""}/accept-invite?token=${createdInvite.token}`
-    : "";
-
-  const handleCopyLink = async () => {
-    if (!inviteLink) return;
-    try {
-      await navigator.clipboard.writeText(inviteLink);
-      setCopied(true);
-      toast.success("Invite link copied to clipboard!");
-      setTimeout(() => setCopied(false), 2500);
-    } catch {
-      toast.error("Failed to copy link");
     }
   };
 
@@ -119,11 +99,11 @@ export default function InviteModal({ isOpen, onClose }: InviteModalProps) {
             </div>
             <div>
               <DialogTitle className="text-xl font-semibold text-slate-900">
-                {createdInvite ? "Invitation Ready" : "Invite New Member"}
+                {createdInvite ? "Invitation Sent" : "Invite New Member"}
               </DialogTitle>
               <DialogDescription className="text-sm text-slate-500">
                 {createdInvite
-                  ? "Share the activation link with the invited person."
+                  ? "The onboarding invitation has been emailed to the recipient."
                   : "Send an onboarding invitation to join your Siteledger team."}
               </DialogDescription>
             </div>
@@ -132,50 +112,40 @@ export default function InviteModal({ isOpen, onClose }: InviteModalProps) {
 
         {createdInvite ? (
           <div className="mt-4 space-y-4">
-            <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-4">
-              <p className="text-xs font-semibold uppercase tracking-wider text-emerald-800">
-                Invite Link Generated
-              </p>
-              <p className="mt-1 text-sm text-emerald-900">
-                An invitation token was generated for{" "}
-                <span className="font-semibold">{createdInvite.email}</span> as{" "}
-                <span className="font-semibold">{createdInvite.role}</span>.
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50/70 p-5 text-center">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                <CheckCircle2 size={26} />
+              </div>
+              <h3 className="text-base font-semibold text-emerald-950">
+                Invitation Email Delivered
+              </h3>
+              <p className="mt-1.5 text-xs text-emerald-800 leading-relaxed">
+                An invitation email has been sent to{" "}
+                <span className="font-semibold text-emerald-950">
+                  {createdInvite.email}
+                </span>{" "}
+                with secure onboarding and account activation instructions.
               </p>
             </div>
 
-            <div className="space-y-1.5">
-              <label className="text-xs font-medium text-slate-700">
-                Direct Invitation Link
-              </label>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  readOnly
-                  value={inviteLink}
-                  className="form-input flex-1 bg-slate-50 text-xs font-mono select-all"
-                />
-                <button
-                  type="button"
-                  onClick={handleCopyLink}
-                  className="btn-secondary px-3 py-2 text-xs flex items-center gap-1.5"
-                >
-                  {copied ? (
-                    <>
-                      <Check size={14} className="text-emerald-600" />
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy size={14} />
-                      Copy
-                    </>
-                  )}
-                </button>
+            <div className="rounded-lg border border-slate-200 bg-slate-50/80 p-3.5 space-y-2 text-xs">
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">Recipient:</span>
+                <span className="font-medium text-slate-800">{createdInvite.email}</span>
               </div>
-              <p className="text-[11px] text-slate-500">
-                This link expires in 7 days. Anyone with this link can set up their account password.
-              </p>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">Assigned Role:</span>
+                <span className="font-semibold text-amber-700">{createdInvite.role}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-slate-500">Link Validity:</span>
+                <span className="text-slate-600">Expires in 7 days</span>
+              </div>
             </div>
+
+            <p className="text-[12px] text-slate-500 text-center">
+              The recipient can click the button in their email to activate their account and set their password.
+            </p>
 
             <DialogFooter className="mt-6 sm:justify-between">
               <button
@@ -277,7 +247,7 @@ export default function InviteModal({ isOpen, onClose }: InviteModalProps) {
                 disabled={isLoading}
               >
                 <UserPlus size={16} />
-                {isLoading ? "Creating invite..." : "Send Invitation"}
+                {isLoading ? "Sending invitation email..." : "Send Invitation"}
               </button>
             </DialogFooter>
           </form>
