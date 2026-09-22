@@ -43,6 +43,56 @@ const payrollApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ["leave"],
     }),
+    createWithdraw: builder.mutation<
+      any,
+      { workerId: string; amount: number }
+    >({
+      query: ({ workerId, amount }) => ({
+        url: `/workers/${workerId}/withdraws`,
+        method: "POST",
+        body: { amount },
+      }),
+      invalidatesTags: ["withdraws", "payments", "workers"],
+    }),
+    getWorkerWithdraws: builder.query<
+      any,
+      { workerId: string; params?: string }
+    >({
+      query: ({ workerId, params = "" }) =>
+        `/workers/${workerId}/withdraws${params ? `?${params}` : ""}`,
+      providesTags: ["withdraws"],
+    }),
+    listAllWithdraws: builder.query<any, string | void>({
+      query: (params = "") =>
+        `/workers/withdraws/all${params ? `?${params}` : ""}`,
+      providesTags: ["withdraws"],
+    }),
+    reviewWithdraw: builder.mutation<
+      any,
+      {
+        workerId: string;
+        withdrawId: string;
+        body: { status: "Accepted" | "Rejected"; note?: string };
+      }
+    >({
+      query: ({ workerId, withdrawId, body }) => ({
+        url: `/workers/${workerId}/withdraws/${withdrawId}/review`,
+        method: "PATCH",
+        body,
+      }),
+      invalidatesTags: ["withdraws", "payments", "workers"],
+    }),
+    getStripeConnectStatus: builder.query<any, string>({
+      query: (workerId) => `/workers/${workerId}/stripe-connect/status`,
+      providesTags: ["withdraws"],
+    }),
+    getStripeOnboardingLink: builder.mutation<any, string>({
+      query: (workerId) => ({
+        url: `/workers/${workerId}/stripe-connect/onboard`,
+        method: "POST",
+      }),
+      invalidatesTags: ["withdraws"],
+    }),
   }),
 });
 
@@ -54,4 +104,11 @@ export const {
   useListLeavesQuery,
   useCreateLeaveMutation,
   useReviewLeaveMutation,
+  useCreateWithdrawMutation,
+  useGetWorkerWithdrawsQuery,
+  useListAllWithdrawsQuery,
+  useReviewWithdrawMutation,
+  useGetStripeConnectStatusQuery,
+  useGetStripeOnboardingLinkMutation,
 } = payrollApi;
+

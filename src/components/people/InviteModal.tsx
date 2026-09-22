@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Mail, Send, UserPlus } from "lucide-react";
+import { CheckCircle2, Mail, UserPlus } from "lucide-react";
 import { toast } from "react-toastify";
 import {
   Dialog,

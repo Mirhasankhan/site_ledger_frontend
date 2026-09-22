@@ -10,6 +10,7 @@ const collaborationApi = baseApi.injectEndpoints({
       query: (body) => ({ url: "/chat/rooms", method: "POST", body }),
       invalidatesTags: ["chat"],
     }),
+
     getRoomMessages: builder.query<any, { roomId: string; page?: number }>({
       query: ({ roomId, page = 1 }) =>
         `/chat/rooms/${roomId}/messages?page=${page}&limit=50`,
@@ -17,6 +18,7 @@ const collaborationApi = baseApi.injectEndpoints({
         { type: "chat", id: roomId },
       ],
     }),
+
     sendDirectMessage: builder.mutation<
       any,
       { roomId: string; body: { content?: string; fileUrl?: string[] } }
@@ -30,6 +32,7 @@ const collaborationApi = baseApi.injectEndpoints({
         { type: "chat", id: roomId },
       ],
     }),
+
     getProjectMessages: builder.query<
       any,
       { projectId: string; page?: number }
@@ -40,6 +43,7 @@ const collaborationApi = baseApi.injectEndpoints({
         { type: "chat", id: projectId },
       ],
     }),
+
     sendProjectMessage: builder.mutation<
       any,
       { projectId: string; body: { content?: string; fileUrl?: string[] } }
@@ -53,6 +57,7 @@ const collaborationApi = baseApi.injectEndpoints({
         { type: "chat", id: projectId },
       ],
     }),
+    
     getGlobalActivity: builder.query<any, string | void>({
       query: (params = "") => `/activity${params ? `?${params}` : ""}`,
       providesTags: ["activity"],

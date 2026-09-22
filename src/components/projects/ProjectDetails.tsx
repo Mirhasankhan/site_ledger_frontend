@@ -27,20 +27,37 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-export default function ProjectDetails({ projectId }: { projectId: string }) {
+export default function ProjectDetails({
+  projectId,
+  role = "ADMIN",
+}: {
+  projectId: string;
+  role?: "ADMIN" | "SITE_MANAGER" | "WORKER";
+}) {
   const router = useRouter();
   const { data, isLoading, isError, refetch } = useGetProjectQuery(projectId);
   const [deleteProject, { isLoading: deleting }] = useDeleteProjectMutation();
   const project = data?.data;
-  const tabs = [
-    { label: "Overview", href: `/admin/projects/${projectId}` },
-    { label: "Workers", href: `/admin/projects/${projectId}/workers` },
-    { label: "Tasks", href: `/admin/projects/${projectId}/tasks` },
-    { label: "Rates", href: `/admin/projects/${projectId}/rates` },
-  ];
+  const base =
+    role === "ADMIN"
+      ? "/admin"
+      : role === "SITE_MANAGER"
+        ? "/site-manager"
+        : "/worker";
+
+  const tabs =
+    role === "ADMIN"
+      ? [
+          { label: "Overview", href: `/admin/projects/${projectId}` },
+          { label: "Workers", href: `/admin/projects/${projectId}/workers` },
+          { label: "Tasks", href: `/admin/projects/${projectId}/tasks` },
+          { label: "Rates", href: `/admin/projects/${projectId}/rates` },
+        ]
+      : [{ label: "Overview", href: `${base}/projects/${projectId}` }];
+
   const onDelete = async () => {
     await deleteProject(projectId).unwrap();
-    router.replace("/admin/projects");
+    router.replace(`${base}/projects`);
   };
   if (isLoading)
     return (
@@ -62,7 +79,7 @@ export default function ProjectDetails({ projectId }: { projectId: string }) {
   return (
     <div className="space-y-6">
       <Link
-        href="/admin/projects"
+        href={`${base}/projects`}
         className="inline-flex items-center gap-2 text-sm font-medium text-slate-500 hover:text-slate-900"
       >
         <ArrowLeft size={16} />
@@ -82,42 +99,44 @@ export default function ProjectDetails({ projectId }: { projectId: string }) {
             {project.projectCode || "No project code"} · {project.address}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Link
-            href={`/admin/projects/${projectId}/edit`}
-            className="btn-secondary"
-          >
-            <Pencil size={16} />
-            Edit
-          </Link>
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <button className="btn-secondary text-red-700 hover:border-red-200 hover:bg-red-50">
-                <Trash2 size={16} />
-                Delete
-              </button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Delete this project?</AlertDialogTitle>
-                <AlertDialogDescription>
-                  This permanently removes the project and its project-linked
-                  records. This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  className="bg-red-600 hover:bg-red-700"
-                  disabled={deleting}
-                  onClick={onDelete}
-                >
-                  {deleting ? "Deleting..." : "Delete project"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
+        {role === "ADMIN" && (
+          <div className="flex gap-2">
+            <Link
+              href={`/admin/projects/${projectId}/edit`}
+              className="btn-secondary"
+            >
+              <Pencil size={16} />
+              Edit
+            </Link>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button className="btn-secondary text-red-700 hover:border-red-200 hover:bg-red-50">
+                  <Trash2 size={16} />
+                  Delete
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete this project?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This permanently removes the project and its project-linked
+                    records. This action cannot be undone.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-red-600 hover:bg-red-700"
+                    disabled={deleting}
+                    onClick={onDelete}
+                  >
+                    {deleting ? "Deleting..." : "Delete project"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        )}
       </div>
       <nav className="flex gap-6 overflow-x-auto border-b border-slate-200">
         {tabs.map((tab) => (
@@ -130,6 +149,7 @@ export default function ProjectDetails({ projectId }: { projectId: string }) {
           </Link>
         ))}
       </nav>
+
       <div className="grid gap-5 lg:grid-cols-[1.3fr_0.7fr]">
         <section className="card-surface rounded-[9px] overflow-hidden">
           {project.projectImage && (

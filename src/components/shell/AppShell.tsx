@@ -2,6 +2,7 @@
 
 import { useCurrentUser, logOut } from "@/redux/features/auth/authSlice";
 import { useAppDispatch, useAppSelector } from "@/redux/hooks";
+import { useProfileQuery } from "@/redux/features/auth/authApi";
 import {
   BarChart3,
   ClipboardCheck,
@@ -18,8 +19,10 @@ import {
   Users,
   Activity,
   Bell,
+  Settings,
 } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 import Cookies from "js-cookie";
 import { useState } from "react";
@@ -103,6 +106,12 @@ const navigation = [
     icon: Bell,
     roles: ["ADMIN", "SITE_MANAGER", "WORKER"],
   },
+  {
+    label: "Settings",
+    href: "/settings",
+    icon: Settings,
+    roles: ["ADMIN", "SITE_MANAGER", "WORKER"],
+  },
 ];
 
 const roleLabels = {
@@ -122,6 +131,11 @@ export default function AppShell({
   const router = useRouter();
   const user = useAppSelector(useCurrentUser);
   const dispatch = useAppDispatch();
+  const { data: profileResponse } = useProfileQuery(undefined);
+  const profile = profileResponse?.data || profileResponse?.result;
+  const displayName = profile?.userName || user.name || "Siteledger user";
+  const profileImage = profile?.profileImage;
+
   const [mobileOpen, setMobileOpen] = useState(false);
   const base =
     role === "ADMIN"
@@ -209,20 +223,35 @@ export default function AppShell({
           >
             <PanelLeft size={20} />
           </button>
-          <div className="ml-auto flex items-center gap-3">
+          <Link
+            href={`${base}/settings`}
+            className="group ml-auto flex items-center gap-3 rounded-xl p-1.5 transition hover:bg-slate-100/80"
+            title="Open settings"
+          >
             <div className="hidden text-right sm:block">
-              <p className="text-sm font-semibold text-slate-900">
-                {user.name || "Siteledger user"}
+              <p className="text-sm font-semibold text-slate-900 group-hover:text-amber-600 transition">
+                {displayName}
               </p>
               <p className="text-xs text-slate-500">{roleLabels[role]}</p>
             </div>
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-800">
-              {(user.name || user.email || "S").slice(0, 1).toUpperCase()}
+            <div className="relative flex h-9 w-9 overflow-hidden items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-800 ring-2 ring-transparent group-hover:ring-amber-500/30 transition shrink-0">
+              {profileImage ? (
+                <Image
+                  src={profileImage}
+                  alt={displayName}
+                  fill
+                  sizes="36px"
+                  className="object-cover"
+                />
+              ) : (
+                (displayName || user.email || "S").slice(0, 1).toUpperCase()
+              )}
             </div>
-          </div>
+          </Link>
         </header>
         <main className="mx-auto max-w-[1440px] p-5 sm:p-8">{children}</main>
       </div>
     </div>
   );
 }
+

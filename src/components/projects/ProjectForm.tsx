@@ -3,12 +3,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertCircle,
-  Image as ImageIcon,
   Save,
   Trash2,
   UploadCloud,
   UserCheck,
 } from "lucide-react";
+
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -91,11 +91,11 @@ export default function ProjectForm({ project }: { project?: ProjectData }) {
   const {
     register,
     handleSubmit,
-    setValue,
     setError,
     watch,
     formState: { errors },
   } = useForm<Values>({
+
     resolver: zodResolver(schema),
     defaultValues: { ...initialValues, ...project, ...defaultDates },
   });
@@ -274,7 +274,7 @@ export default function ProjectForm({ project }: { project?: ProjectData }) {
                   : "(Available)";
               return (
                 <option key={manager.id} value={manager.id}>
-                  {manager.userName} — {manager.email} {assignmentBadge}
+                  {manager.userName} — {assignmentBadge}
                 </option>
               );
             })}
