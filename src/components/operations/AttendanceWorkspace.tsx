@@ -5,6 +5,7 @@ import {
   AlertCircle,
   CalendarCheck,
   Check,
+  CheckCircle2,
   Clock3,
   ShieldCheck,
 } from "lucide-react";
@@ -52,6 +53,7 @@ export default function AttendanceWorkspace({
     {},
   );
   const [actionError, setActionError] = useState("");
+  const [selfSuccess, setSelfSuccess] = useState("");
   const selectedProject =
     projects.find((project: any) => project.id === projectId) || projects[0];
   const activeProjectId = projectId || selectedProject?.id || "";
@@ -109,6 +111,7 @@ export default function AttendanceWorkspace({
   };
   const submitSelf = async (values: z.infer<typeof selfSchema>) => {
     setActionError("");
+    setSelfSuccess("");
     try {
       await selfCheckIn({
         projectId: activeProjectId || undefined,
@@ -121,6 +124,7 @@ export default function AttendanceWorkspace({
           : undefined,
         notes: values.notes || undefined,
       }).unwrap();
+      setSelfSuccess("Attendance submitted successfully! Pending manager verification.");
     } catch (error) {
       setError("root", {
         message: errorMessage(error, "Self check-in could not be saved."),
@@ -155,6 +159,63 @@ export default function AttendanceWorkspace({
                 {selectedProject.projectName}
               </p>
             </div>
+
+            {selfSuccess && (
+              <div className="flex items-center gap-3 rounded-[9px] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+                <CheckCircle2 size={18} className="shrink-0 text-emerald-600" />
+                <p className="font-medium">{selfSuccess}</p>
+              </div>
+            )}
+
+            {records.length > 0 && (
+              <div className="card-surface rounded-[9px] border-l-4 border-l-amber-500 p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      Today&apos;s Attendance Record
+                    </p>
+                    <div className="mt-1 flex items-center gap-2">
+                      <span className="inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-800">
+                        {records[0].status?.replace(/_/g, " ")}
+                      </span>
+                      <span className="text-xs text-slate-500">
+                        (Source: {records[0].source})
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right text-xs text-slate-500">
+                    {records[0].selfCheckIn && (
+                      <p>
+                        Check-in:{" "}
+                        <span className="font-medium text-slate-700">
+                          {new Date(records[0].selfCheckIn).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </p>
+                    )}
+                    {records[0].selfCheckOut && (
+                      <p>
+                        Check-out:{" "}
+                        <span className="font-medium text-slate-700">
+                          {new Date(records[0].selfCheckOut).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+                {records[0].notes && (
+                  <p className="mt-2 text-xs italic text-slate-600">
+                    Note: {records[0].notes}
+                  </p>
+                )}
+              </div>
+            )}
+
             <form
               onSubmit={handleSubmit(submitSelf)}
               className="card-surface max-w-2xl rounded-[9px] p-6"

@@ -54,6 +54,7 @@ export default function AcceptInvitePage() {
       const response = await acceptInvite({
         token,
         password: values.password,
+        
       }).unwrap();
       Cookies.set("token", response.data.accessToken, { sameSite: "lax" });
       dispatch(
