@@ -16,6 +16,11 @@ import { useAppDispatch } from "@/redux/hooks";
 
 const schema = z
   .object({
+    userName: z
+      .string()
+      .trim()
+      .min(1, "Name is required")
+      .min(2, "Name must be at least 2 characters"),
     password: z.string().min(6, "Password must be at least 6 characters"),
     confirmPassword: z.string().min(6, "Confirm your password"),
   })
@@ -43,7 +48,14 @@ export default function AcceptInvitePage() {
     handleSubmit,
     setError,
     formState: { errors },
-  } = useForm<Values>({ resolver: zodResolver(schema) });
+  } = useForm<Values>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      userName: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
   const invite = data?.data;
   const errorMessage =
     (error as { data?: { message?: string } })?.data?.message ||
@@ -53,8 +65,8 @@ export default function AcceptInvitePage() {
     try {
       const response = await acceptInvite({
         token,
+        userName: values.userName.trim(),
         password: values.password,
-        
       }).unwrap();
       Cookies.set("token", response.data.accessToken, { sameSite: "lax" });
       dispatch(
@@ -108,46 +120,38 @@ export default function AcceptInvitePage() {
             <div className="mt-6 grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="form-label" htmlFor="invite-email">
-                  Email
+                  Invited Email
                 </label>
                 <input
                   id="invite-email"
-                  className="form-input"
+                  placeholder="name@example.com"
+                  className="form-input bg-slate-900/50 text-slate-400"
                   value={invite.email}
                   disabled
                 />
               </div>
               <div>
-                <label className="form-label" htmlFor="invite-name">
-                  Name
-                </label>
-                <input
-                  id="invite-name"
-                  className="form-input"
-                  value={invite.name || "Not provided"}
-                  disabled
-                />
-              </div>
-              <div>
                 <label className="form-label" htmlFor="invite-role">
-                  Role
+                  Assigned Role
                 </label>
                 <input
                   id="invite-role"
-                  className="form-input"
-                  value={invite.role}
+                  placeholder="Assigned role"
+                  className="form-input bg-slate-900/50 text-slate-400"
+                  value={invite.role.replace("_", " ")}
                   disabled
                 />
               </div>
               {invite.workerCategory && (
-                <div>
+                <div className="sm:col-span-2">
                   <label className="form-label" htmlFor="invite-category">
                     Worker category
                   </label>
                   <input
                     id="invite-category"
-                    className="form-input"
-                    value={invite.workerCategory}
+                    placeholder="Worker category"
+                    className="form-input bg-slate-900/50 text-slate-400"
+                    value={invite.workerCategory.replace("_", " ")}
                     disabled
                   />
                 </div>
@@ -155,12 +159,28 @@ export default function AcceptInvitePage() {
             </div>
             <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-5">
               <div>
+                <label className="form-label" htmlFor="userName">
+                  Full Name <span className="text-red-500">*</span>
+                </label>
+                <input
+                  id="userName"
+                  type="text"
+                  placeholder="Enter your full name"
+                  className="form-input"
+                  {...register("userName")}
+                />
+                {errors.userName && (
+                  <p className="form-error">{errors.userName.message}</p>
+                )}
+              </div>
+              <div>
                 <label className="form-label" htmlFor="password">
-                  Password
+                  Password <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="password"
                   type="password"
+                  placeholder="Enter your password"
                   className="form-input"
                   {...register("password")}
                 />
@@ -170,11 +190,12 @@ export default function AcceptInvitePage() {
               </div>
               <div>
                 <label className="form-label" htmlFor="confirmPassword">
-                  Confirm password
+                  Confirm password <span className="text-red-500">*</span>
                 </label>
                 <input
                   id="confirmPassword"
                   type="password"
+                  placeholder="Re-enter your password"
                   className="form-input"
                   {...register("confirmPassword")}
                 />

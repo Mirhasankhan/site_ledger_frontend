@@ -110,6 +110,7 @@ export default function ProjectRates({ projectId }: { projectId: string }) {
             <input
               id="dailyRate"
               type="number"
+              placeholder="0.00"
               className="form-input"
               {...register("dailyRate")}
             />
@@ -124,6 +125,7 @@ export default function ProjectRates({ projectId }: { projectId: string }) {
             <input
               id="overtimeRate"
               type="number"
+              placeholder="0.00"
               className="form-input"
               {...register("overtimeRate")}
             />

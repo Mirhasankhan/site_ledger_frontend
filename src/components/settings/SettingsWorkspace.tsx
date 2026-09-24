@@ -443,6 +443,7 @@ export default function SettingsWorkspace({ role }: SettingsWorkspaceProps) {
               <input
                 type="email"
                 value={profile?.email || ""}
+                placeholder="name@example.com"
                 disabled
                 className="form-input bg-slate-100/70 text-slate-500 cursor-not-allowed border-slate-200"
               />

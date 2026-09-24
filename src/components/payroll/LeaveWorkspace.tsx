@@ -178,6 +178,7 @@ export default function LeaveWorkspace({
               <input
                 id="startDate"
                 type="date"
+                placeholder="Select start date"
                 className="form-input"
                 {...register("startDate")}
               />
@@ -192,6 +193,7 @@ export default function LeaveWorkspace({
               <input
                 id="endDate"
                 type="date"
+                placeholder="Select end date"
                 className="form-input"
                 {...register("endDate")}
               />
@@ -205,6 +207,7 @@ export default function LeaveWorkspace({
               </label>
               <textarea
                 id="reason"
+                placeholder="Provide details or reason for the leave request..."
                 className="form-input min-h-20"
                 {...register("reason")}
               />

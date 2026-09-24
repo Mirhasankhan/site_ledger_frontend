@@ -164,6 +164,7 @@ export default function DailyReportsWorkspace({
                 <input
                   id="date"
                   type="date"
+                  placeholder="Select report date"
                   className="form-input"
                   {...register("date")}
                 />
@@ -177,6 +178,7 @@ export default function DailyReportsWorkspace({
                 </label>
                 <input
                   id="weather"
+                  placeholder="e.g. Sunny, 24°C / Light rain"
                   className="form-input"
                   {...register("weather")}
                 />
@@ -188,6 +190,7 @@ export default function DailyReportsWorkspace({
                 <input
                   id="presentWorkers"
                   type="number"
+                  placeholder="0"
                   className="form-input"
                   {...register("presentWorkers")}
                 />
@@ -202,6 +205,7 @@ export default function DailyReportsWorkspace({
                 <input
                   id="absentWorkers"
                   type="number"
+                  placeholder="0"
                   className="form-input"
                   {...register("absentWorkers")}
                 />
@@ -226,6 +230,7 @@ export default function DailyReportsWorkspace({
                   </label>
                   <textarea
                     id={name}
+                    placeholder={`Describe ${label.toLowerCase()}...`}
                     className="form-input min-h-24"
                     {...register(name)}
                   />

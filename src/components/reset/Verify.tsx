@@ -89,6 +89,7 @@ const VerifyOtp = ({ setActive }: { setActive: (value: string) => void }) => {
                 type="text"
                 inputMode="numeric"
                 maxLength={1}
+                placeholder="-"
                 className={`w-12 h-12 text-center text-xl border-2 rounded-[4px] focus:outline-none transition 
                 ${
                   focusedIndex === i

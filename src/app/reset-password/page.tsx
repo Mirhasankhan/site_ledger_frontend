@@ -67,6 +67,7 @@ export default function ResetPasswordPage() {
             <input
               id="password"
               type="password"
+              placeholder="Enter new password"
               className="form-input"
               {...register("password")}
             />
@@ -81,6 +82,7 @@ export default function ResetPasswordPage() {
             <input
               id="confirmPassword"
               type="password"
+              placeholder="Confirm your new password"
               className="form-input"
               {...register("confirmPassword")}
             />

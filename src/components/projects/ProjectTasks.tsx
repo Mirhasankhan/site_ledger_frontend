@@ -103,6 +103,7 @@ export default function ProjectTasks({ projectId }: { projectId: string }) {
                 </label>
                 <input
                   id="title"
+                  placeholder="e.g. Install second floor plumbing"
                   className="form-input"
                   {...register("title")}
                 />
@@ -117,6 +118,7 @@ export default function ProjectTasks({ projectId }: { projectId: string }) {
                 <input
                   id="progress"
                   type="number"
+                  placeholder="0"
                   className="form-input"
                   {...register("progress")}
                 />
@@ -159,6 +161,7 @@ export default function ProjectTasks({ projectId }: { projectId: string }) {
               </label>
               <textarea
                 id="description"
+                placeholder="Detailed description of the task requirements..."
                 className="form-input min-h-24"
                 {...register("description")}
               />

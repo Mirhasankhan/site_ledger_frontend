@@ -288,6 +288,7 @@ export default function MaterialsWorkspace({
               </label>
               <input
                 id="material-name"
+                placeholder="e.g. Portland Cement (50kg)"
                 className="form-input"
                 {...registerMaterial("name")}
               />
@@ -330,6 +331,7 @@ export default function MaterialsWorkspace({
               <input
                 id="unitCost"
                 type="number"
+                placeholder="0.00"
                 className="form-input"
                 {...registerMaterial("unitCost")}
               />
@@ -344,6 +346,7 @@ export default function MaterialsWorkspace({
               <input
                 id="minimumStock"
                 type="number"
+                placeholder="0"
                 className="form-input"
                 {...registerMaterial("minimumStock")}
               />
@@ -354,6 +357,7 @@ export default function MaterialsWorkspace({
               </label>
               <input
                 id="supplier"
+                placeholder="e.g. BuildPro Materials"
                 className="form-input"
                 {...registerMaterial("supplier")}
               />
@@ -364,6 +368,7 @@ export default function MaterialsWorkspace({
               </label>
               <input
                 id="location"
+                placeholder="e.g. Warehouse A, Bay 4"
                 className="form-input"
                 {...registerMaterial("location")}
               />
@@ -497,6 +502,7 @@ export default function MaterialsWorkspace({
                 <input
                   className="form-input"
                   type="date"
+                  placeholder="Select purchase date"
                   {...registerMovement("date")}
                 />
               </div>
@@ -552,6 +558,7 @@ export default function MaterialsWorkspace({
                 <input
                   className="form-input"
                   type="date"
+                  placeholder="Select usage date"
                   {...registerMovement("date")}
                 />
                 <input
@@ -604,6 +611,7 @@ export default function MaterialsWorkspace({
               <input
                 className="form-input"
                 type="date"
+                placeholder="Required date"
                 {...registerRequest("requiredDate")}
               />
               <input

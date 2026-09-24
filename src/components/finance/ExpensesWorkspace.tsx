@@ -161,6 +161,7 @@ export default function ExpensesWorkspace({
                 </label>
                 <input
                   id="title"
+                  placeholder="e.g. Concrete mix supplies"
                   className="form-input"
                   {...register("title")}
                 />
@@ -189,6 +190,7 @@ export default function ExpensesWorkspace({
                 <input
                   id="amount"
                   type="number"
+                  placeholder="0.00"
                   className="form-input"
                   {...register("amount")}
                 />
@@ -203,6 +205,7 @@ export default function ExpensesWorkspace({
                 <input
                   id="date"
                   type="date"
+                  placeholder="Select expense date"
                   className="form-input"
                   {...register("date")}
                 />
@@ -213,6 +216,7 @@ export default function ExpensesWorkspace({
                 </label>
                 <input
                   id="vendor"
+                  placeholder="e.g. BuildPro Supplies Ltd"
                   className="form-input"
                   {...register("vendor")}
                 />
@@ -223,6 +227,7 @@ export default function ExpensesWorkspace({
                 </label>
                 <input
                   id="reference"
+                  placeholder="e.g. INV-2024-001"
                   className="form-input"
                   {...register("reference")}
                 />
@@ -233,6 +238,7 @@ export default function ExpensesWorkspace({
                 </label>
                 <input
                   id="receiptUrl"
+                  placeholder="https://example.com/receipt.pdf"
                   className="form-input"
                   {...register("receiptUrl")}
                 />
@@ -244,6 +250,7 @@ export default function ExpensesWorkspace({
               </label>
               <textarea
                 id="notes"
+                placeholder="Add any additional notes about this expense..."
                 className="form-input min-h-20"
                 {...register("notes")}
               />

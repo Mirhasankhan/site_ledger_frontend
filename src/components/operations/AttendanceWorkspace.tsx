@@ -228,6 +228,7 @@ export default function AttendanceWorkspace({
                   <input
                     id="checkIn"
                     type="datetime-local"
+                    placeholder="Select check-in time"
                     className="form-input"
                     {...register("checkIn")}
                   />
@@ -239,6 +240,7 @@ export default function AttendanceWorkspace({
                   <input
                     id="checkOut"
                     type="datetime-local"
+                    placeholder="Select check-out time"
                     className="form-input"
                     {...register("checkOut")}
                   />
@@ -328,6 +330,7 @@ export default function AttendanceWorkspace({
           <input
             id="attendance-date"
             type="date"
+            placeholder="Select attendance date"
             className="form-input"
             value={date}
             onChange={(event) => setDate(event.target.value)}

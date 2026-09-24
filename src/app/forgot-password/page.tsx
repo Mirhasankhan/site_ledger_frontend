@@ -58,6 +58,7 @@ export default function ForgotPasswordPage() {
                 id="email"
                 type="email"
                 className="form-input"
+                placeholder="Enter your email address"
                 {...register("email")}
               />
               {errors.email && (
