@@ -18,7 +18,6 @@ import {
   CalendarHeart,
   Users,
   Activity,
-  Bell,
   Settings,
 } from "lucide-react";
 import Link from "next/link";
@@ -68,13 +67,13 @@ const navigation = [
     label: "Expenses",
     href: "/expenses",
     icon: Receipt,
-    roles: ["ADMIN", "SITE_MANAGER", "WORKER"],
+    roles: ["ADMIN", "SITE_MANAGER"],
   },
   {
     label: "Materials",
     href: "/materials",
     icon: Boxes,
-    roles: ["ADMIN", "SITE_MANAGER", "WORKER"],
+    roles: ["ADMIN", "SITE_MANAGER"],
   },
   {
     label: "Payments",
@@ -98,12 +97,6 @@ const navigation = [
     label: "Activity",
     href: "/activity",
     icon: Activity,
-    roles: ["ADMIN", "SITE_MANAGER", "WORKER"],
-  },
-  {
-    label: "Notifications",
-    href: "/notifications",
-    icon: Bell,
     roles: ["ADMIN", "SITE_MANAGER", "WORKER"],
   },
   {
@@ -178,9 +171,23 @@ export default function AppShell({
             {navigation
               .filter((item) => item.roles.includes(role))
               .map((item) => {
-                const href = `${base}${item.href}`;
+                let itemHref = item.href;
+                let itemLabel = item.label;
+                if (item.href === "/payments") {
+                  if (role === "WORKER") {
+                    itemHref = "/earnings";
+                    itemLabel = "Earnings & Payouts";
+                  } else {
+                    itemLabel = "Payroll & Payouts";
+                  }
+                }
+                const href = `${base}${itemHref}`;
                 const active =
                   pathname === href ||
+                  (item.href === "/payments" &&
+                    role === "WORKER" &&
+                    (pathname === `${base}/earnings` ||
+                      pathname === `${base}/payments`)) ||
                   (item.href === "/people" && pathname === `${base}/workers`);
                 const Icon = item.icon;
                 return (
@@ -191,7 +198,7 @@ export default function AppShell({
                     className={`flex items-center gap-3 rounded-[6px] px-3 py-2.5 text-sm transition ${active ? "bg-amber-500 text-white" : "hover:bg-white/10 hover:text-white"}`}
                   >
                     <Icon size={17} />
-                    {item.label}
+                    {itemLabel}
                   </Link>
                 );
               })}

@@ -1,6 +1,5 @@
 "use client";
 
-import { zodResolver } from "@hookform/resolvers/zod";
 import {
   AlertCircle,
   ArrowUpRight,
@@ -10,24 +9,17 @@ import {
   CreditCard,
   History,
   Loader2,
-  Plus,
-  RotateCcw,
   Wallet,
 } from "lucide-react";
 import Image from "next/image";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
 import { toast } from "react-toastify";
 import {
   useListProjectsQuery,
   useListWorkersQuery,
 } from "@/redux/features/projects/projectApi";
 import {
-  useCreatePaymentMutation,
-  useDeletePaymentMutation,
   useGetWorkerEarningsQuery,
-  useListPaymentsQuery,
   useCreateWithdrawMutation,
   useGetWorkerWithdrawsQuery,
   useListAllWithdrawsQuery,
@@ -39,17 +31,6 @@ import { useProfileQuery } from "@/redux/features/auth/authApi";
 import { useCurrentUser } from "@/redux/features/auth/authSlice";
 import { useAppSelector } from "@/redux/hooks";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -57,20 +38,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-// Schema for issuing worker payment (adds to worker earnings)
-const schema = z.object({
-  workerId: z.string().min(1, "Choose a worker"),
-  projectId: z.string().min(1, "Choose a project"),
-  amount: z
-    .string()
-    .refine(
-      (value) => Number.isInteger(Number(value)) && Number(value) > 0,
-      "Enter a positive whole amount",
-    ),
-  reference: z.string().optional(),
-  note: z.string().optional(),
-});
 
 function errorMessage(error: unknown, fallback: string) {
   return (error as { data?: { message?: string } })?.data?.message || fallback;
@@ -83,8 +50,8 @@ export default function PaymentsWorkspace({
 }) {
   const canRecord = role !== "WORKER";
 
-  // Navigation tab: "payments" (Earnings) or "withdraws" (Stripe Withdrawals)
-  const [activeTab, setActiveTab] = useState<"payments" | "withdraws">("payments");
+  // Navigation tab: "withdraws" (Stripe Payouts) or "overview" (Balances / Breakdown)
+  const [activeTab, setActiveTab] = useState<"withdraws" | "overview">("withdraws");
 
   // Profile data
   const { data: profileData } = useProfileQuery(undefined);
@@ -94,7 +61,11 @@ export default function PaymentsWorkspace({
   const projects = projectsData?.data ?? [];
   const [projectId, setProjectId] = useState("");
 
-  const { data: workersData } = useListWorkersQuery(
+  const {
+    data: workersData,
+    isLoading: workersLoading,
+    refetch: refetchWorkers,
+  } = useListWorkersQuery(
     canRecord
       ? projectId
         ? `projectId=${projectId}&limit=100`
@@ -109,39 +80,15 @@ export default function PaymentsWorkspace({
       ? currentUser?.id || profile?.id || ownWorker?.workerId
       : ownWorker?.workerId || profile?.id) || "";
 
-  const [workerId, setWorkerId] = useState("");
-  const activeWorkerId = canRecord ? workerId : ownWorkerId;
-
-  // Payments / Earning Credits Query
-  const {
-    data: paymentsData,
-    isLoading: paymentsLoading,
-    isError: paymentsError,
-    refetch: refetchPayments,
-  } = useListPaymentsQuery(
-    canRecord
-      ? projectId
-        ? `projectId=${projectId}`
-        : ""
-      : activeWorkerId
-        ? `workerId=${activeWorkerId}`
-        : "",
-    { skip: !canRecord && !activeWorkerId },
-  );
-
-  // Worker live earnings
+  // Worker live earnings (derived from verified attendance shifts)
   const {
     data: earningsData,
     isLoading: earningsLoading,
     refetch: refetchEarnings,
   } = useGetWorkerEarningsQuery(
-    { workerId: activeWorkerId },
-    { skip: !activeWorkerId },
+    { workerId: ownWorkerId },
+    { skip: !ownWorkerId || role !== "WORKER" },
   );
-
-  const [createPayment, { isLoading: recording }] = useCreatePaymentMutation();
-  const [deletePayment, { isLoading: reversing }] = useDeletePaymentMutation();
-  const [showForm, setShowForm] = useState(false);
 
   // ── Worker Withdraw State & Queries ──────────────────────────────────────
   const [isWithdrawModalOpen, setIsWithdrawModalOpen] = useState(false);
@@ -208,44 +155,12 @@ export default function PaymentsWorkspace({
   const [rejectTarget, setRejectTarget] = useState<any | null>(null);
   const [rejectNote, setRejectNote] = useState("");
 
-  const {
-    register,
-    handleSubmit,
-    reset,
-    setError,
-    formState: { errors },
-  } = useForm<z.infer<typeof schema>>({
-    resolver: zodResolver(schema),
-    defaultValues: { amount: "", reference: "", note: "" },
-  });
-
-  const payments = paymentsData?.data ?? [];
   const earnings = earningsData?.data;
   const currentEarnings =
-    earnings?.currentEarnings ?? ownWorker?.currentEarnings ?? 0;
-
-  // Handle Admin Giving Worker Payment (Credits to Earnings)
-  const onSubmit = async (values: z.infer<typeof schema>) => {
-    try {
-      await createPayment({
-        ...values,
-        amount: Number(values.amount),
-      }).unwrap();
-      reset({
-        workerId: "",
-        projectId: values.projectId,
-        amount: "",
-        reference: "",
-        note: "",
-      });
-      setShowForm(false);
-      toast.success("Worker payment credited to earnings balance!");
-    } catch (error) {
-      setError("root", {
-        message: errorMessage(error, "Payment could not be recorded."),
-      });
-    }
-  };
+    earnings?.availableBalance ??
+    earnings?.currentEarnings ??
+    ownWorker?.currentEarnings ??
+    0;
 
   // Connect Stripe handler for worker
   const handleConnectStripe = async () => {
@@ -272,7 +187,7 @@ export default function PaymentsWorkspace({
 
     if (amountNum > currentEarnings) {
       toast.error(
-        `Withdrawal amount cannot exceed your current earnings ($${currentEarnings.toLocaleString()})`,
+        `Withdrawal amount cannot exceed your available earnings ($${currentEarnings.toLocaleString()})`,
       );
       return;
     }
@@ -303,7 +218,7 @@ export default function PaymentsWorkspace({
     }
   };
 
-  // Admin Approve & Transfer
+  // Admin Approve & Transfer via Stripe
   const handleConfirmApprove = async () => {
     if (!approveTarget) return;
     try {
@@ -318,6 +233,7 @@ export default function PaymentsWorkspace({
       );
       setApproveTarget(null);
       refetchAllWithdraws();
+      refetchWorkers();
     } catch (err: any) {
       toast.error(
         errorMessage(err, "Failed to approve withdrawal and transfer funds"),
@@ -339,6 +255,7 @@ export default function PaymentsWorkspace({
       setRejectTarget(null);
       setRejectNote("");
       refetchAllWithdraws();
+      refetchWorkers();
     } catch (err: any) {
       toast.error(errorMessage(err, "Failed to reject withdrawal"));
     }
@@ -350,15 +267,15 @@ export default function PaymentsWorkspace({
       <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-amber-600">
-            Payroll & Finance
+            {canRecord ? "Payouts & Financial Operations" : "Earnings & Payouts"}
           </p>
           <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-            {canRecord ? "Worker Payments & Withdrawals" : "My Earnings & Withdrawals"}
+            {canRecord ? "Worker Payouts & Withdrawals" : "My Earnings & Payouts"}
           </h1>
           <p className="mt-2 text-slate-500">
             {canRecord
-              ? "Credit worker earnings for project work and review withdrawal payout requests."
-              : "Track your earnings history, manage your Stripe payout account, and withdraw funds."}
+              ? "All worker compensation is paid exclusively via Stripe Connect. Review requests and audit attendance earnings."
+              : "Attendance shifts automatically accrue earnings. Withdraw your available balance directly to your bank via Stripe Connect."}
           </p>
         </div>
 
@@ -378,9 +295,9 @@ export default function PaymentsWorkspace({
                 className="btn-secondary text-xs"
               >
                 {generatingLink ? (
-                  <Loader2 size={15} className="animate-spin" />
+                  <Loader2 size={15} className="animate-spin mr-1" />
                 ) : (
-                  <CreditCard size={15} />
+                  <CreditCard size={15} className="mr-1" />
                 )}
                 Connect Stripe
               </button>
@@ -391,21 +308,10 @@ export default function PaymentsWorkspace({
               onClick={() => setIsWithdrawModalOpen(true)}
               className="btn-primary text-xs"
             >
-              <ArrowUpRight size={16} />
+              <ArrowUpRight size={16} className="mr-1" />
               Request Withdrawal
             </button>
           </div>
-        )}
-
-        {/* Admin Action Button */}
-        {canRecord && activeTab === "payments" && (
-          <button
-            className="btn-primary"
-            onClick={() => setShowForm((value) => !value)}
-          >
-            <Plus size={17} />
-            {showForm ? "Close form" : "Credit Worker Earnings"}
-          </button>
         )}
       </div>
 
@@ -417,7 +323,7 @@ export default function PaymentsWorkspace({
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {/* Withdrawable Balance */}
-              <div className="card-surface rounded-[9px] p-5 border-l-4 border-l-amber-500">
+              <div className="card-surface rounded-[9px] p-5 border-l-4 border-l-amber-500 shadow-sm">
                 <div className="flex items-center justify-between">
                   <Wallet className="text-amber-600" size={20} />
                   <button
@@ -434,49 +340,49 @@ export default function PaymentsWorkspace({
                   ${Number(currentEarnings).toLocaleString()}
                 </p>
                 <p className="mt-1 text-[11px] text-slate-400">
-                  Transfers directly to your bank via Stripe
+                  Earned from attendance, ready for Stripe payout
                 </p>
               </div>
 
               {/* All-time Earnings */}
-              <div className="card-surface rounded-[9px] p-5">
+              <div className="card-surface rounded-[9px] p-5 shadow-sm">
                 <CircleDollarSign className="text-emerald-600" size={20} />
                 <p className="mt-3 text-xs font-medium uppercase tracking-wider text-slate-500">
                   Total Lifetime Earned
                 </p>
                 <p className="mt-1 text-2xl font-bold text-slate-900">
-                  ${Number(earnings?.allTimeEarnings ?? ownWorker?.allTimeEarnings ?? 0).toLocaleString()}
+                  ${Number(earnings?.grossEarnings ?? earnings?.allTimeEarnings ?? 0).toLocaleString()}
                 </p>
                 <p className="mt-1 text-[11px] text-slate-400">
-                  All earnings credited from projects
+                  Cumulative verified attendance shifts
                 </p>
               </div>
 
               {/* Total Withdrawn via Stripe */}
-              <div className="card-surface rounded-[9px] p-5">
+              <div className="card-surface rounded-[9px] p-5 shadow-sm">
                 <Banknote className="text-blue-600" size={20} />
                 <p className="mt-3 text-xs font-medium uppercase tracking-wider text-slate-500">
                   Paid Out via Stripe
                 </p>
                 <p className="mt-1 text-2xl font-bold text-slate-900">
-                  ${Number(totalWithdrawn).toLocaleString()}
+                  ${Number(earnings?.totalWithdrawn ?? totalWithdrawn).toLocaleString()}
                 </p>
                 <p className="mt-1 text-[11px] text-slate-400">
-                  Total successfully transferred to bank
+                  Direct transfers completed to bank
                 </p>
               </div>
 
               {/* Pending Withdrawals */}
-              <div className="card-surface rounded-[9px] p-5">
+              <div className="card-surface rounded-[9px] p-5 shadow-sm">
                 <History className="text-amber-600" size={20} />
                 <p className="mt-3 text-xs font-medium uppercase tracking-wider text-slate-500">
                   Pending Review
                 </p>
                 <p className="mt-1 text-2xl font-bold text-amber-700">
-                  ${Number(pendingWithdrawn).toLocaleString()}
+                  ${Number(earnings?.pendingWithdrawals ?? pendingWithdrawn).toLocaleString()}
                 </p>
                 <p className="mt-1 text-[11px] text-slate-400">
-                  Awaiting administrator approval
+                  Awaiting administrator review
                 </p>
               </div>
             </div>
@@ -492,7 +398,7 @@ export default function PaymentsWorkspace({
                     Stripe Payout Account Required
                   </h4>
                   <p className="mt-0.5 text-xs text-amber-800">
-                    To withdraw your earnings directly to your bank account, please connect your Stripe account.
+                    To receive payouts from your attendance earnings, connect your Stripe account. There are no offline payments.
                   </p>
                 </div>
               </div>
@@ -503,9 +409,9 @@ export default function PaymentsWorkspace({
                 className="btn-secondary self-start sm:self-center shrink-0 text-xs bg-white hover:bg-slate-50 border-amber-300 text-amber-900"
               >
                 {generatingLink ? (
-                  <Loader2 size={14} className="animate-spin" />
+                  <Loader2 size={14} className="animate-spin mr-1" />
                 ) : (
-                  <CreditCard size={14} />
+                  <CreditCard size={14} className="mr-1" />
                 )}
                 Connect Stripe Account
               </button>
@@ -514,19 +420,8 @@ export default function PaymentsWorkspace({
         </div>
       )}
 
-      {/* ── Universal Navigation Tabs ─────────────────────────────────────────── */}
+      {/* ── Navigation Tabs ─────────────────────────────────────────────────── */}
       <div className="flex border-b border-slate-200">
-        <button
-          onClick={() => setActiveTab("payments")}
-          className={`flex items-center gap-2 border-b-2 px-5 py-2.5 text-sm font-semibold transition ${
-            activeTab === "payments"
-              ? "border-amber-600 text-amber-700"
-              : "border-transparent text-slate-500 hover:text-slate-900"
-          }`}
-        >
-          <Banknote size={16} />
-          {canRecord ? "Worker Earnings Credited" : "Earnings History"}
-        </button>
         <button
           onClick={() => setActiveTab("withdraws")}
           className={`flex items-center gap-2 border-b-2 px-5 py-2.5 text-sm font-semibold transition ${
@@ -548,300 +443,297 @@ export default function PaymentsWorkspace({
             </span>
           )}
         </button>
+
+        <button
+          onClick={() => setActiveTab("overview")}
+          className={`flex items-center gap-2 border-b-2 px-5 py-2.5 text-sm font-semibold transition ${
+            activeTab === "overview"
+              ? "border-amber-600 text-amber-700"
+              : "border-transparent text-slate-500 hover:text-slate-900"
+          }`}
+        >
+          <Banknote size={16} />
+          {canRecord ? "Worker Balances & Accrued Earnings" : "Shift Earnings Breakdown"}
+        </button>
       </div>
 
-      {/* ── Admin: Credit Worker Earnings Form ──────────────────────────────── */}
-      {canRecord && activeTab === "payments" && showForm && (
-        <section className="card-surface rounded-[9px] p-6 space-y-4">
-          <div>
-            <h3 className="text-base font-semibold text-slate-900">
-              Issue Worker Payment (Credit to Earnings)
-            </h3>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Credits the selected worker&apos;s earnings balance for project labor. The worker can then withdraw their funds via Stripe.
-            </p>
+      {/* ── Admin: Withdrawal Requests Management ────────────────────────────── */}
+      {canRecord && activeTab === "withdraws" && (
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-base font-semibold text-slate-900">
+                Stripe Withdrawal Requests
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Review worker payout requests and execute direct Stripe transfers to their connected accounts.
+              </p>
+            </div>
+            <button
+              onClick={() => refetchAllWithdraws()}
+              className="btn-secondary text-xs"
+            >
+              Refresh Requests
+            </button>
           </div>
 
-          <form
-            onSubmit={handleSubmit(onSubmit)}
-            className="grid gap-4 md:grid-cols-3"
-          >
+          {allWithdrawsLoading ? (
+            <div className="card-surface h-56 animate-pulse rounded-[9px] bg-slate-100" />
+          ) : allWithdraws.length === 0 ? (
+            <div className="card-surface rounded-[9px] border-dashed p-10 text-center text-sm text-slate-500">
+              No withdrawal requests submitted.
+            </div>
+          ) : (
+            <div className="grid gap-4 lg:grid-cols-2">
+              {allWithdraws.map((w: any) => {
+                const workerUser = w.worker;
+                const workerProfile = workerUser?.workerProfile;
+                const isStripeConnected = !!workerProfile?.stripeAccountId;
+
+                return (
+                  <div
+                    key={w.id}
+                    className="card-surface rounded-[9px] p-5 flex flex-col justify-between border border-slate-100 hover:border-slate-200 transition shadow-sm gap-4"
+                  >
+                    <div className="flex items-start gap-3.5">
+                      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-slate-200">
+                        {workerUser?.profileImage ? (
+                          <Image
+                            src={workerUser.profileImage}
+                            alt={workerUser?.userName || "Worker"}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center font-bold text-slate-600">
+                            {(workerUser?.userName || "W").slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-semibold text-slate-900 truncate">
+                            {workerUser?.userName || "Worker"}
+                          </p>
+                          <span
+                            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+                              w.status === "Accepted"
+                                ? "bg-emerald-100 text-emerald-800"
+                                : w.status === "Rejected"
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {w.status === "Accepted" ? "Settled via Stripe" : w.status}
+                          </span>
+                          {isStripeConnected ? (
+                            <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-700">
+                              <CreditCard size={11} className="text-emerald-600" />
+                              Stripe Ready
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 rounded bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-600">
+                              No Stripe Account
+                            </span>
+                          )}
+                        </div>
+
+                        <p className="mt-0.5 text-xs text-slate-500 truncate">
+                          {workerUser?.email} · {workerProfile?.project?.projectName || "No Project"}
+                        </p>
+
+                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
+                          <span>
+                            Requested:{" "}
+                            <strong className="text-slate-900 font-bold text-sm">
+                              ${Number(w.amount).toLocaleString()}
+                            </strong>
+                          </span>
+                          <span>
+                            Available: ${Number(workerProfile?.currentEarnings ?? 0).toLocaleString()}
+                          </span>
+                          <span>
+                            {new Date(w.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+
+                        {w.transferId && (
+                          <p className="mt-2 text-xs text-emerald-700 font-mono bg-emerald-50 rounded p-1.5 border border-emerald-100">
+                            Transfer ID: {w.transferId}
+                          </p>
+                        )}
+                        {w.note && (
+                          <p className="mt-1 text-xs text-slate-600 italic">
+                            Note: {w.note}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Admin Actions */}
+                    {w.status === "Pending" && (
+                      <div className="flex items-center gap-2 pt-3 border-t border-slate-100 justify-end">
+                        <button
+                          onClick={() => setApproveTarget(w)}
+                          disabled={!isStripeConnected}
+                          title={
+                            !isStripeConnected
+                              ? "Worker has not connected a Stripe account"
+                              : "Approve and execute Stripe transfer"
+                          }
+                          className="btn-primary text-xs bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
+                        >
+                          Approve & Transfer via Stripe
+                        </button>
+                        <button
+                          onClick={() => {
+                            setRejectTarget(w);
+                            setRejectNote("");
+                          }}
+                          className="btn-secondary text-xs text-red-600 hover:bg-red-50 hover:border-red-200"
+                        >
+                          Reject
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* ── Admin: Worker Balances & Accrued Earnings Overview ─────────────────── */}
+      {canRecord && activeTab === "overview" && (
+        <section className="space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <label className="form-label" htmlFor="projectId">
-                Project *
+              <h2 className="text-base font-semibold text-slate-900">
+                Worker Balances & Accrued Earnings
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Earnings are accrued exclusively through verified attendance. Outstanding balances block worker removal.
+              </p>
+            </div>
+
+            {/* Filter by Project */}
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor="filter-project"
+                className="text-xs font-semibold text-slate-500 uppercase tracking-wider shrink-0"
+              >
+                Project:
               </label>
               <select
-                id="projectId"
-                className="form-input"
-                {...register("projectId")}
-                onChange={(event) => {
-                  setProjectId(event.target.value);
-                  register("projectId").onChange(event);
-                }}
+                id="filter-project"
+                className="form-input text-xs py-1.5 max-w-xs"
+                value={projectId}
+                onChange={(event) => setProjectId(event.target.value)}
               >
-                <option value="">Select project</option>
+                <option value="">All visible projects</option>
                 {projects.map((project: any) => (
                   <option key={project.id} value={project.id}>
                     {project.projectName}
                   </option>
                 ))}
               </select>
-              {errors.projectId && (
-                <p className="form-error">{errors.projectId.message}</p>
-              )}
             </div>
-
-            <div>
-              <label className="form-label" htmlFor="workerId">
-                Worker *
-              </label>
-              <select
-                id="workerId"
-                className="form-input"
-                {...register("workerId")}
-                onChange={(event) => {
-                  setWorkerId(event.target.value);
-                  register("workerId").onChange(event);
-                }}
-              >
-                <option value="">Select worker</option>
-                {workers.map((worker: any) => (
-                  <option key={worker.workerId} value={worker.workerId}>
-                    {worker.worker?.userName || worker.workerId} · outstanding{" "}
-                    ${worker.outstandingAmount || 0}
-                  </option>
-                ))}
-              </select>
-              {errors.workerId && (
-                <p className="form-error">{errors.workerId.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="form-label" htmlFor="amount">
-                Amount ($) *
-              </label>
-              <input
-                id="amount"
-                type="number"
-                placeholder="e.g. 500"
-                className="form-input"
-                {...register("amount")}
-              />
-              {errors.amount && (
-                <p className="form-error">{errors.amount.message}</p>
-              )}
-            </div>
-
-            <div>
-              <label className="form-label" htmlFor="reference">
-                Reference / Task Code (Optional)
-              </label>
-              <input
-                id="reference"
-                placeholder="e.g. TASK-102 or Foundation-Shift"
-                className="form-input"
-                {...register("reference")}
-              />
-            </div>
-
-            <div className="md:col-span-2">
-              <label className="form-label" htmlFor="note">
-                Note / Description (Optional)
-              </label>
-              <input
-                id="note"
-                placeholder="e.g. Overtime pay for milestone 2"
-                className="form-input"
-                {...register("note")}
-              />
-            </div>
-
-            <div className="md:col-span-3 rounded-lg border border-amber-200 bg-amber-50/70 p-3 text-xs text-amber-900 flex items-center gap-2">
-              <AlertCircle size={16} className="text-amber-600 shrink-0" />
-              <span>
-                All payouts occur exclusively via Stripe Connect. Crediting this payment increases the worker&apos;s available earnings balance and settles their outstanding balance.
-              </span>
-            </div>
-
-            {errors.root && (
-              <p className="text-sm text-red-700 md:col-span-3">
-                {errors.root.message}
-              </p>
-            )}
-
-            <div className="flex gap-3 md:col-span-3 pt-2">
-              <button
-                type="submit"
-                disabled={recording}
-                className="btn-primary"
-              >
-                {recording ? "Crediting Earnings..." : "Confirm & Credit Earnings"}
-              </button>
-              <button
-                type="button"
-                className="btn-secondary"
-                onClick={() => setShowForm(false)}
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </section>
-      )}
-
-      {/* ── Admin Project Filter (When viewing Earnings Credited) ───────────── */}
-      {canRecord && activeTab === "payments" && (
-        <div className="flex items-center gap-3">
-          <label
-            htmlFor="filter-project"
-            className="text-xs font-semibold text-slate-500 uppercase tracking-wider shrink-0"
-          >
-            Filter by Project:
-          </label>
-          <select
-            id="filter-project"
-            className="form-input max-w-xs"
-            value={projectId}
-            onChange={(event) => setProjectId(event.target.value)}
-          >
-            <option value="">All visible projects</option>
-            {projects.map((project: any) => (
-              <option key={project.id} value={project.id}>
-                {project.projectName}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
-
-      {/* ── Tab Content 1: Earnings History / Worker Earnings Credited ───────── */}
-      {activeTab === "payments" && (
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-semibold text-slate-900">
-                {canRecord ? "Worker Earnings Credited" : "My Earnings History"}
-              </h2>
-              <p className="text-xs text-slate-500 mt-0.5">
-                {canRecord
-                  ? "History of all labor payments and wage allocations credited to worker accounts."
-                  : "All payments and earnings credited to your account for project assignments and approved labor."}
-              </p>
-            </div>
-            <button
-              onClick={() => refetchPayments()}
-              className="btn-secondary text-xs"
-            >
-              Refresh
-            </button>
           </div>
 
-          {paymentsLoading ? (
+          {workersLoading ? (
             <div className="card-surface h-56 animate-pulse rounded-[9px] bg-slate-100" />
-          ) : paymentsError ? (
-            <div className="card-surface rounded-[9px] p-8 text-center">
-              <AlertCircle className="mx-auto text-red-600" size={24} />
-              <p className="mt-3 font-semibold">Earnings history could not be loaded</p>
-              <button className="mt-4 btn-secondary" onClick={() => refetchPayments()}>
-                Try again
-              </button>
-            </div>
-          ) : payments.length === 0 ? (
+          ) : workers.length === 0 ? (
             <div className="card-surface rounded-[9px] border-dashed p-10 text-center text-sm text-slate-500">
-              {canRecord
-                ? "No worker payments credited yet. Click 'Credit Worker Earnings' above to issue payment."
-                : "No earnings credited to your account yet."}
+              No workers found in current project scope.
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {payments.map((payment: any) => (
-                <div
-                  key={payment.id}
-                  className="card-surface rounded-[9px] p-5 flex flex-col justify-between border border-slate-100 hover:border-slate-200 transition shadow-sm"
-                >
-                  <div>
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-slate-900">
-                            {canRecord
-                              ? payment.worker?.userName || "Worker"
-                              : payment.project?.projectName || "Project Work"}
-                          </p>
-                          {payment.reference && (
-                            <span className="rounded bg-slate-100 px-2 py-0.5 text-[11px] font-mono text-slate-600">
-                              Ref: {payment.reference}
-                            </span>
-                          )}
-                        </div>
-
-                        <p className="text-xs text-slate-500 mt-1">
-                          {canRecord
-                            ? `${payment.project?.projectName || "Project"} · Credited on ${new Date(payment.createdAt).toLocaleDateString()}`
-                            : `Credited on ${new Date(payment.createdAt).toLocaleDateString()}`}
-                          {payment.recordedBy?.userName && (
-                            <span> · by {payment.recordedBy.userName}</span>
-                          )}
-                        </p>
-                      </div>
-
-                      <span className="font-bold text-lg text-emerald-700 shrink-0">
-                        +${Number(payment.amount).toLocaleString()}
-                      </span>
-                    </div>
-
-                    {payment.note && (
-                      <p className="mt-3 rounded-md bg-slate-50 p-2.5 text-xs text-slate-600 italic">
-                        Note: {payment.note}
-                      </p>
-                    )}
-                  </div>
-
-                  {role === "ADMIN" && canRecord && (
-                    <div className="mt-4 pt-3 border-t border-slate-100 flex justify-end">
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <button
-                            className="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-red-600 transition"
-                            title="Reverse payment credit"
-                            aria-label="Reverse payment"
-                          >
-                            <RotateCcw size={13} />
-                            Reverse
-                          </button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              Reverse this payment credit?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This will remove the payment credit, decrement the worker&apos;s earnings balance, and restore their outstanding balance.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              className="bg-red-600 hover:bg-red-700"
-                              disabled={reversing}
-                              onClick={() => deletePayment(payment.id)}
+            <div className="card-surface overflow-hidden rounded-[9px] shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    <tr>
+                      <th className="px-5 py-3">Worker</th>
+                      <th className="px-4 py-3">Category</th>
+                      <th className="px-4 py-3">Project</th>
+                      <th className="px-4 py-3 text-right">Daily Rate</th>
+                      <th className="px-4 py-3 text-right">Lifetime Earned</th>
+                      <th className="px-4 py-3 text-right">Available to Withdraw</th>
+                      <th className="px-4 py-3 text-right">Outstanding (Project)</th>
+                      <th className="px-4 py-3 text-center">Stripe Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {workers.map((w: any) => {
+                      const hasOutstanding = Number(w.outstandingAmount || 0) > 0;
+                      return (
+                        <tr key={w.id} className="hover:bg-slate-50/80 transition">
+                          <td className="px-5 py-3.5 font-medium text-slate-900">
+                            <div className="flex items-center gap-2.5">
+                              <div className="h-7 w-7 rounded-full bg-slate-200 flex items-center justify-center font-bold text-xs text-slate-700">
+                                {(w.worker?.userName || "W").slice(0, 1).toUpperCase()}
+                              </div>
+                              <div>
+                                <p>{w.worker?.userName || "Unnamed"}</p>
+                                <p className="text-[11px] text-slate-400 font-normal">{w.worker?.email}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3.5 text-slate-600">
+                            {w.workerCategory}
+                          </td>
+                          <td className="px-4 py-3.5 text-slate-600">
+                            {w.project?.projectName || (
+                              <span className="text-slate-400 italic">Unassigned</span>
+                            )}
+                          </td>
+                          <td className="px-4 py-3.5 text-right font-medium text-slate-700">
+                            ${Number(w.dailyRate || 0).toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3.5 text-right font-medium text-slate-900">
+                            ${Number(w.allTimeEarnings || 0).toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3.5 text-right font-bold text-emerald-700">
+                            ${Number(w.currentEarnings || 0).toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3.5 text-right font-bold">
+                            <span
+                              className={
+                                hasOutstanding ? "text-red-700" : "text-slate-500"
+                              }
                             >
-                              {reversing ? "Reversing..." : "Reverse payment"}
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  )}
-                </div>
-              ))}
+                              ${Number(w.outstandingAmount || 0).toLocaleString()}
+                            </span>
+                            {hasOutstanding && (
+                              <p className="text-[10px] text-red-500 font-normal">
+                                Removal locked
+                              </p>
+                            )}
+                          </td>
+                          <td className="px-4 py-3.5 text-center">
+                            {w.stripeAccountId ? (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 border border-emerald-200">
+                                <CheckCircle2 size={12} /> Connected
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600">
+                                Not Connected
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
         </section>
       )}
 
-      {/* ── Tab Content 2: Worker Withdrawal History ────────────────────────── */}
+      {/* ── Worker: Withdrawal History ────────────────────────────────────────── */}
       {!canRecord && activeTab === "withdraws" && (
         <section className="space-y-4">
           <div className="flex items-center justify-between">
@@ -850,7 +742,7 @@ export default function PaymentsWorkspace({
                 My Withdrawal History
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                All earnings payout requests transferred directly to your connected Stripe account.
+                All earnings payouts transferred directly to your connected Stripe account.
               </p>
             </div>
             <button
@@ -931,149 +823,98 @@ export default function PaymentsWorkspace({
         </section>
       )}
 
-      {/* ── Tab Content 2: Admin Withdrawal Requests Management ─────────────── */}
-      {canRecord && activeTab === "withdraws" && (
+      {/* ── Worker: Attendance Shift Earnings Breakdown ───────────────────────── */}
+      {!canRecord && activeTab === "overview" && (
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="text-base font-semibold text-slate-900">
-                Worker Withdrawal Requests
+                Attendance Shift Earnings Breakdown
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Review worker payout requests and execute direct Stripe transfers to their connected accounts.
+                Every dollar in your account is calculated directly from your verified attendance records.
               </p>
             </div>
             <button
-              onClick={() => refetchAllWithdraws()}
+              onClick={() => refetchEarnings()}
               className="btn-secondary text-xs"
             >
-              Refresh Requests
+              Refresh
             </button>
           </div>
 
-          {allWithdrawsLoading ? (
-            <div className="card-surface h-56 animate-pulse rounded-[9px] bg-slate-100" />
-          ) : allWithdraws.length === 0 ? (
+          {earningsLoading ? (
+            <div className="card-surface h-48 animate-pulse rounded-[9px] bg-slate-100" />
+          ) : !earnings?.breakdown || earnings.breakdown.length === 0 ? (
             <div className="card-surface rounded-[9px] border-dashed p-10 text-center text-sm text-slate-500">
-              No withdrawal requests submitted.
+              No verified attendance shifts recorded yet. As your manager records and verifies your attendance, your earnings will accrue here.
             </div>
           ) : (
-            <div className="grid gap-4 lg:grid-cols-2">
-              {allWithdraws.map((w: any) => {
-                const workerUser = w.worker;
-                const workerProfile = workerUser?.workerProfile;
-                const isStripeConnected = !!workerProfile?.stripeAccountId;
-
-                return (
-                  <div
-                    key={w.id}
-                    className="card-surface rounded-[9px] p-5 flex flex-col justify-between border border-slate-100 hover:border-slate-200 transition shadow-sm gap-4"
-                  >
-                    <div className="flex items-start gap-3.5">
-                      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full bg-slate-200">
-                        {workerUser?.profileImage ? (
-                          <Image
-                            src={workerUser.profileImage}
-                            alt={workerUser?.userName || "Worker"}
-                            fill
-                            className="object-cover"
-                          />
-                        ) : (
-                          <div className="flex h-full w-full items-center justify-center font-bold text-slate-600">
-                            {(workerUser?.userName || "W").slice(0, 1).toUpperCase()}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-semibold text-slate-900 truncate">
-                            {workerUser?.userName || "Worker"}
-                          </p>
+            <div className="card-surface overflow-hidden rounded-[9px] shadow-sm">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm">
+                  <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                    <tr>
+                      <th className="px-5 py-3">Date</th>
+                      <th className="px-4 py-3">Project</th>
+                      <th className="px-4 py-3">Shift Status</th>
+                      <th className="px-4 py-3 text-right">Base Pay</th>
+                      <th className="px-4 py-3 text-right">Overtime</th>
+                      <th className="px-4 py-3 text-right">Total Shift Pay</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {earnings.breakdown.map((shift: any) => (
+                      <tr key={shift.id || shift.date} className="hover:bg-slate-50/80 transition">
+                        <td className="px-5 py-3.5 font-medium text-slate-900">
+                          {new Date(shift.date).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3.5 text-slate-600">
+                          {shift.projectName || "Assigned Project"}
+                        </td>
+                        <td className="px-4 py-3.5">
                           <span
-                            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
-                              w.status === "Accepted"
+                            className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                              shift.status === "Present"
                                 ? "bg-emerald-100 text-emerald-800"
-                                : w.status === "Rejected"
-                                  ? "bg-red-100 text-red-800"
-                                  : "bg-amber-100 text-amber-800"
+                                : shift.status === "Half_Day"
+                                  ? "bg-amber-100 text-amber-800"
+                                  : "bg-slate-100 text-slate-700"
                             }`}
                           >
-                            {w.status}
+                            {shift.status === "Half_Day" ? "Half Day" : shift.status}
                           </span>
-                          {isStripeConnected ? (
-                            <span className="inline-flex items-center gap-1 rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-700">
-                              <CreditCard size={11} className="text-emerald-600" />
-                              Stripe Ready
+                        </td>
+                        <td className="px-4 py-3.5 text-right font-medium text-slate-700">
+                          ${Number(shift.base || 0).toLocaleString()}
+                        </td>
+                        <td className="px-4 py-3.5 text-right text-slate-600">
+                          {shift.overtimeHours > 0 ? (
+                            <span>
+                              {shift.overtimeHours}h (+${Number(shift.overtimePay || 0).toLocaleString()})
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 rounded bg-red-50 px-1.5 py-0.5 text-[11px] font-medium text-red-600">
-                              No Stripe
-                            </span>
+                            <span className="text-slate-400">—</span>
                           )}
-                        </div>
-
-                        <p className="mt-0.5 text-xs text-slate-500 truncate">
-                          {workerUser?.email} · {workerProfile?.project?.projectName || "No Project"}
-                        </p>
-
-                        <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-500">
-                          <span>
-                            Requested:{" "}
-                            <strong className="text-slate-900 font-bold text-sm">
-                              ${Number(w.amount).toLocaleString()}
-                            </strong>
-                          </span>
-                          <span>
-                            Balance: ${Number(workerProfile?.currentEarnings ?? 0).toLocaleString()}
-                          </span>
-                          <span>
-                            {new Date(w.createdAt).toLocaleDateString()}
-                          </span>
-                        </div>
-
-                        {w.transferId && (
-                          <p className="mt-2 text-xs text-emerald-700 font-mono bg-emerald-50 rounded p-1.5 border border-emerald-100">
-                            Transfer ID: {w.transferId}
-                          </p>
-                        )}
-                        {w.note && (
-                          <p className="mt-1 text-xs text-slate-600 italic">
-                            Note: {w.note}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Admin Actions */}
-                    {w.status === "Pending" && (
-                      <div className="flex items-center gap-2 pt-3 border-t border-slate-100 justify-end">
-                        <button
-                          onClick={() => setApproveTarget(w)}
-                          disabled={!isStripeConnected}
-                          title={
-                            !isStripeConnected
-                              ? "Worker has not connected a Stripe account"
-                              : "Approve and execute Stripe transfer"
-                          }
-                          className="btn-primary text-xs bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50"
-                        >
-                          Approve & Transfer
-                        </button>
-                        <button
-                          onClick={() => {
-                            setRejectTarget(w);
-                            setRejectNote("");
-                          }}
-                          className="btn-secondary text-xs text-red-600 hover:bg-red-50 hover:border-red-200"
-                        >
-                          Reject
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+                        </td>
+                        <td className="px-4 py-3.5 text-right font-bold text-emerald-700">
+                          +${Number(shift.total || 0).toLocaleString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot className="border-t-2 border-slate-200 bg-slate-50 font-semibold text-slate-900">
+                    <tr>
+                      <td colSpan={5} className="px-5 py-3 text-right">
+                        Total Gross Earnings from Shifts:
+                      </td>
+                      <td className="px-4 py-3 text-right text-emerald-700 text-base font-bold">
+                        ${Number(earnings.grossEarnings || 0).toLocaleString()}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
             </div>
           )}
         </section>
@@ -1093,7 +934,7 @@ export default function PaymentsWorkspace({
           <DialogHeader>
             <DialogTitle>Request Earnings Withdrawal</DialogTitle>
             <DialogDescription>
-              Transfer your earned funds directly to your connected Stripe bank account.
+              Transfer your earned attendance funds directly to your connected Stripe bank account.
             </DialogDescription>
           </DialogHeader>
 
@@ -1157,7 +998,7 @@ export default function PaymentsWorkspace({
                   required
                 />
                 <p className="mt-1 text-[11px] text-slate-500">
-                  Funds will be transferred to your connected Stripe account upon admin approval.
+                  Funds will be transferred directly to your bank account via Stripe upon approval.
                 </p>
               </div>
 
@@ -1171,7 +1012,7 @@ export default function PaymentsWorkspace({
                 </button>
                 <button
                   type="submit"
-                  disabled={submittingWithdraw || Number(withdrawAmount) <= 0}
+                  disabled={submittingWithdraw || Number(withdrawAmount) <= 0 || Number(withdrawAmount) > currentEarnings}
                   className="btn-primary text-xs"
                 >
                   {submittingWithdraw ? (
@@ -1196,13 +1037,13 @@ export default function PaymentsWorkspace({
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Approve & Transfer Funds</DialogTitle>
+            <DialogTitle>Approve & Transfer Funds via Stripe</DialogTitle>
             <DialogDescription>
-              This will execute a Stripe transfer of{" "}
+              This will execute an actual Stripe transfer of{" "}
               <strong className="text-slate-900 font-semibold">
                 ${Number(approveTarget?.amount ?? 0).toLocaleString()}
               </strong>{" "}
-              directly to {approveTarget?.worker?.userName}&apos;s connected Stripe account and decrement their earnings balance.
+              directly to {approveTarget?.worker?.userName}&apos;s connected Stripe account and settle their earnings.
             </DialogDescription>
           </DialogHeader>
 
@@ -1250,6 +1091,7 @@ export default function PaymentsWorkspace({
             <DialogTitle>Reject Withdrawal Request</DialogTitle>
             <DialogDescription>
               Reject the withdrawal request of ${Number(rejectTarget?.amount ?? 0).toLocaleString()} for {rejectTarget?.worker?.userName}.
+              The reserved amount will be restored to their available balance.
             </DialogDescription>
           </DialogHeader>
 

@@ -104,6 +104,14 @@ const projectApi = baseApi.injectEndpoints({
       query: (id) => ({ url: `/tasks/${id}`, method: "DELETE" }),
       invalidatesTags: ["tasks"],
     }),
+    getGlobalActivity: builder.query<any, string | void>({
+      query: (params = "") => `/projects/activity/global${params ? `?${params}` : ""}`,
+      providesTags: ["projects"],
+    }),
+    getProjectActivity: builder.query<any, { id: string; params?: string }>({
+      query: ({ id, params = "" }) => `/projects/${id}/activity${params ? `?${params}` : ""}`,
+      providesTags: ["projects"],
+    }),
   }),
   overrideExisting: false,
 });
@@ -125,4 +133,6 @@ export const {
   useCreateTaskMutation,
   useUpdateTaskMutation,
   useDeleteTaskMutation,
+  useGetGlobalActivityQuery,
+  useGetProjectActivityQuery,
 } = projectApi;

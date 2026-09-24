@@ -46,12 +46,12 @@ export default function ProjectDetails({
         : "/worker";
 
   const tabs =
-    role === "ADMIN"
+    role === "ADMIN" || role === "SITE_MANAGER"
       ? [
-          { label: "Overview", href: `/admin/projects/${projectId}` },
-          { label: "Workers", href: `/admin/projects/${projectId}/workers` },
-          { label: "Tasks", href: `/admin/projects/${projectId}/tasks` },
-          { label: "Rates", href: `/admin/projects/${projectId}/rates` },
+          { label: "Overview", href: `${base}/projects/${projectId}` },
+          { label: "Workers", href: `${base}/projects/${projectId}/workers` },
+          { label: "Tasks", href: `${base}/projects/${projectId}/tasks` },
+          { label: "Rates", href: `${base}/projects/${projectId}/rates` },
         ]
       : [{ label: "Overview", href: `${base}/projects/${projectId}` }];
 
@@ -190,11 +190,15 @@ export default function ProjectDetails({
           </div>
         </section>
         <aside className="card-surface rounded-[9px] p-6">
-          <p className="text-sm text-slate-500">Budget</p>
-          <p className="mt-2 text-3xl font-semibold">
-            {Number(project.budget || 0).toLocaleString()}
-          </p>
-          <p className="mt-1 text-xs text-slate-500">
+          {role !== "WORKER" && (
+            <>
+              <p className="text-sm text-slate-500">Commercial budget</p>
+              <p className="mt-2 text-3xl font-semibold">
+                ${Number(project.budget || 0).toLocaleString()}
+              </p>
+            </>
+          )}
+          <p className={`${role !== "WORKER" ? "mt-1" : ""} text-xs text-slate-500`}>
             Standard day: {project.standardWorkHours} hours
           </p>
           <div className="mt-7 border-t border-slate-200 pt-5">
@@ -208,7 +212,7 @@ export default function ProjectDetails({
           </div>
         </aside>
       </div>
-      <BudgetSummary projectId={projectId} />
+      {role !== "WORKER" && <BudgetSummary projectId={projectId} />}
     </div>
   );
 }

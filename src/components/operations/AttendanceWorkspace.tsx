@@ -76,11 +76,19 @@ export default function AttendanceWorkspace({
       : "",
     { skip: !activeProjectId },
   );
+  const {
+    data: workerHistoryData,
+    isLoading: workerHistoryLoading,
+  } = useListAttendanceQuery(
+    !managerMode ? "limit=30&sort=-date" : "",
+    { skip: managerMode },
+  );
   const [markBulk, { isLoading: marking }] = useMarkAttendanceBulkMutation();
   const [verify, { isLoading: verifying }] = useVerifyAttendanceMutation();
   const [selfCheckIn, { isLoading: checkingIn }] = useSelfCheckInMutation();
   const workers = workersData?.data ?? [];
   const records = attendanceData?.data ?? [];
+  const workerHistory = workerHistoryData?.data ?? [];
   const {
     register,
     handleSubmit,
@@ -269,6 +277,92 @@ export default function AttendanceWorkspace({
                 {checkingIn ? "Submitting..." : "Submit attendance"}
               </button>
             </form>
+
+            {/* Worker Attendance History */}
+            <div className="card-surface overflow-hidden rounded-[9px]">
+              <div className="border-b border-slate-200 bg-slate-50 px-5 py-4">
+                <h3 className="font-semibold text-slate-900">Attendance History</h3>
+                <p className="text-xs text-slate-500">Your recent attendance shifts and verification statuses</p>
+              </div>
+              {workerHistoryLoading ? (
+                <div className="p-8 text-center text-sm text-slate-500">Loading attendance history...</div>
+              ) : workerHistory.length === 0 ? (
+                <div className="p-8 text-center text-sm text-slate-500">No attendance history records found.</div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-sm">
+                    <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold uppercase tracking-wider text-slate-500">
+                      <tr>
+                        <th className="px-5 py-3">Date</th>
+                        <th className="px-5 py-3">Project</th>
+                        <th className="px-5 py-3">Status</th>
+                        <th className="px-5 py-3">Working Hours</th>
+                        <th className="px-5 py-3">Overtime</th>
+                        <th className="px-5 py-3">Check In/Out</th>
+                        <th className="px-5 py-3">Source</th>
+                        <th className="px-5 py-3">Notes</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {workerHistory.map((item: any) => {
+                        const inTime = item.checkIn || item.selfCheckIn;
+                        const outTime = item.checkOut || item.selfCheckOut;
+                        return (
+                          <tr key={item.id} className="hover:bg-slate-50/60">
+                            <td className="whitespace-nowrap px-5 py-3.5 font-medium text-slate-900">
+                              {new Date(item.date).toLocaleDateString(undefined, {
+                                year: "numeric",
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </td>
+                            <td className="whitespace-nowrap px-5 py-3.5 text-slate-600">
+                              {item.project?.projectName || "Assigned Project"}
+                            </td>
+                            <td className="whitespace-nowrap px-5 py-3.5">
+                              <span
+                                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                                  item.status === "Present"
+                                    ? "bg-emerald-100 text-emerald-800"
+                                    : item.status === "Half_Day"
+                                      ? "bg-amber-100 text-amber-800"
+                                      : item.status === "Absent"
+                                        ? "bg-rose-100 text-rose-800"
+                                        : item.status === "Leave"
+                                          ? "bg-purple-100 text-purple-800"
+                                          : item.status === "Holiday"
+                                            ? "bg-blue-100 text-blue-800"
+                                            : "bg-yellow-100 text-yellow-800"
+                                }`}
+                              >
+                                {item.status?.replace(/_/g, " ")}
+                              </span>
+                            </td>
+                            <td className="whitespace-nowrap px-5 py-3.5 text-slate-700">
+                              {item.workingHours ? `${item.workingHours} hrs` : "—"}
+                            </td>
+                            <td className="whitespace-nowrap px-5 py-3.5 text-slate-700">
+                              {item.overtimeHours ? `${item.overtimeHours} hrs` : "0 hrs"}
+                            </td>
+                            <td className="whitespace-nowrap px-5 py-3.5 text-xs text-slate-500">
+                              {inTime ? new Date(inTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
+                              {" - "}
+                              {outTime ? new Date(outTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}
+                            </td>
+                            <td className="whitespace-nowrap px-5 py-3.5 text-xs text-slate-500">
+                              {item.source}
+                            </td>
+                            <td className="max-w-xs truncate px-5 py-3.5 text-xs text-slate-500">
+                              {item.notes || "—"}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </>
         )}
       </div>

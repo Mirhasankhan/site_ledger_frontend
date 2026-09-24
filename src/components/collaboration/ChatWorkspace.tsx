@@ -5,8 +5,10 @@ import { AlertCircle, MessageCircle, Send, Users } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { useAppSelector } from "@/redux/hooks";
 import {
   useListProjectsQuery,
+  useListSiteManagersQuery,
   useListWorkersQuery,
 } from "@/redux/features/projects/projectApi";
 import {
@@ -28,6 +30,7 @@ export default function ChatWorkspace({
 }: {
   role: "ADMIN" | "SITE_MANAGER" | "WORKER";
 }) {
+  const currentUser = useAppSelector((state) => state.auth);
   const { data: projectsData } = useListProjectsQuery("");
   const projects = useMemo(
     () => projectsData?.data ?? [],
@@ -35,11 +38,16 @@ export default function ChatWorkspace({
   );
   const { data: workersData } = useListWorkersQuery("limit=100");
   const workers = workersData?.data ?? [];
+
+  const { data: managersData } = useListSiteManagersQuery();
+  const managers = managersData?.data ?? [];
+
   const { data: roomsData } = useGetRoomsQuery();
   const [mode, setMode] = useState<"project" | "direct">("project");
   const [projectId, setProjectId] = useState("");
   const [roomId, setRoomId] = useState("");
   const [actionError, setActionError] = useState("");
+
   const {
     data: projectMessagesData,
     isLoading: projectLoading,
@@ -56,12 +64,13 @@ export default function ChatWorkspace({
     { roomId },
     { skip: mode !== "direct" || !roomId },
   );
+
   const [createRoom, { isLoading: creatingRoom }] = useCreateRoomMutation();
   const [sendProjectMessage, { isLoading: sendingProject }] =
     useSendProjectMessageMutation();
   const [sendDirectMessage, { isLoading: sendingDirect }] =
     useSendDirectMessageMutation();
-  const canStartDirect = role !== "WORKER" || workers.length > 0;
+
   const {
     register,
     handleSubmit,
@@ -69,11 +78,13 @@ export default function ChatWorkspace({
     setError,
     formState: { errors },
   } = useForm<Values>({ resolver: zodResolver(schema) });
+
   const rooms = roomsData?.data ?? [];
   const messages =
     mode === "project"
       ? (projectMessagesData?.data ?? [])
       : (roomMessagesData?.data ?? []);
+
   const onSend = async (values: Values) => {
     try {
       if (mode === "project" && projectId)
@@ -89,9 +100,11 @@ export default function ChatWorkspace({
       });
     }
   };
+
   useEffect(() => {
     if (!projectId && projects[0]?.id) setProjectId(projects[0].id);
   }, [projectId, projects]);
+
   return (
     <div className="space-y-7">
       <div>
@@ -100,9 +113,10 @@ export default function ChatWorkspace({
         </p>
         <h1 className="mt-2 text-3xl font-semibold tracking-tight">Messages</h1>
         <p className="mt-2 text-slate-500">
-          Keep project conversations and direct messages in one place.
+          Keep project team conversations and direct 1:1 messages in one place.
         </p>
       </div>
+
       <div className="flex gap-2">
         <button
           className={mode === "project" ? "btn-primary" : "btn-secondary"}
@@ -119,6 +133,7 @@ export default function ChatWorkspace({
           Direct messages
         </button>
       </div>
+
       {mode === "project" ? (
         <div>
           <label className="form-label" htmlFor="chat-project">
@@ -142,7 +157,7 @@ export default function ChatWorkspace({
         <div className="grid gap-4 md:grid-cols-2">
           <div>
             <label className="form-label" htmlFor="room">
-              Conversation
+              Active Conversation
             </label>
             <select
               id="room"
@@ -151,24 +166,33 @@ export default function ChatWorkspace({
               onChange={(event) => setRoomId(event.target.value)}
             >
               <option value="">Select conversation</option>
-              {rooms.map((room: any) => (
-                <option key={room.id} value={room.id}>
-                  {room.user1?.userName ||
-                    room.user2?.userName ||
-                    "Direct message"}
-                </option>
-              ))}
+              {rooms.map((room: any) => {
+                const partner =
+                  room.user1?.id === currentUser?.id
+                    ? room.user2
+                    : room.user1;
+                const partnerName =
+                  partner?.userName || partner?.email || "Team member";
+                const roleLabel = partner?.role
+                  ? ` (${partner.role.replace(/_/g, " ")})`
+                  : "";
+                return (
+                  <option key={room.id} value={room.id}>
+                    {partnerName + roleLabel}
+                  </option>
+                );
+              })}
             </select>
           </div>
           <div>
             <label className="form-label" htmlFor="receiver">
-              Start a conversation
+              Start a new conversation
             </label>
             <select
               id="receiver"
               className="form-input"
               defaultValue=""
-              disabled={creatingRoom || !canStartDirect}
+              disabled={creatingRoom}
               onChange={async (event) => {
                 if (!event.target.value) return;
                 setActionError("");
@@ -180,28 +204,51 @@ export default function ChatWorkspace({
                 } catch (error) {
                   setActionError(
                     (error as { data?: { message?: string } })?.data?.message ||
-                    "Conversation could not be opened.",
+                      "Conversation could not be opened.",
                   );
                 }
               }}
             >
-              <option value="">Choose a worker</option>
-              {workers.map((worker: any) => (
-                <option key={worker.workerId} value={worker.workerId}>
-                  {worker.worker?.userName || worker.workerId}
-                </option>
-              ))}
+              <option value="">Choose a contact</option>
+              {role !== "SITE_MANAGER" && managers.length > 0 && (
+                <optgroup label="Site Managers">
+                  {managers
+                    .filter((m: any) => m.id !== currentUser?.id)
+                    .map((m: any) => (
+                      <option key={m.id} value={m.id}>
+                        {m.userName} (Manager)
+                      </option>
+                    ))}
+                </optgroup>
+              )}
+              {workers.length > 0 && (
+                <optgroup label="Workers">
+                  {workers
+                    .filter((w: any) => (w.worker?.id || w.workerId) !== currentUser?.id)
+                    .map((worker: any) => (
+                      <option
+                        key={worker.workerId || worker.id}
+                        value={worker.worker?.id || worker.workerId}
+                      >
+                        {worker.worker?.userName || "Worker"} (
+                        {worker.workerCategory || "Worker"})
+                      </option>
+                    ))}
+                </optgroup>
+              )}
             </select>
           </div>
         </div>
       )}
+
       {actionError && (
         <div className="rounded-[6px] bg-red-50 px-4 py-3 text-sm text-red-700">
           {actionError}
         </div>
       )}
+
       <section className="card-surface flex min-h-[28rem] flex-col overflow-hidden rounded-[9px]">
-        <div className="flex-1 space-y-3 overflow-y-auto bg-slate-50 p-5">
+        <div className="flex-1 space-y-4 overflow-y-auto bg-slate-50 p-5">
           {(mode === "project" ? projectLoading : roomLoading) ? (
             <div className="h-32 animate-pulse rounded bg-slate-200" />
           ) : (mode === "project" ? projectError : roomError) ? (
@@ -219,17 +266,63 @@ export default function ChatWorkspace({
               No messages yet. Start the conversation.
             </div>
           ) : (
-            messages.map((message: any) => (
-              <div
-                key={message.id}
-                className={`max-w-xl rounded-[9px] border border-slate-200 bg-white p-3 shadow-sm ${message.isSystem ? "border-amber-200 bg-amber-50" : ""}`}
-              >
-                <p className="text-sm leading-6">{message.content}</p>
-                <p className="mt-1 text-[11px] text-slate-400">
-                  {new Date(message.createdAt).toLocaleString()}
-                </p>
-              </div>
-            ))
+            messages.map((message: any) => {
+              const isMe =
+                message.senderId === currentUser?.id ||
+                message.sender?.id === currentUser?.id;
+              const isSystem = message.isSystem;
+
+              if (isSystem) {
+                return (
+                  <div
+                    key={message.id}
+                    className="mx-auto max-w-lg rounded-[8px] border border-amber-200 bg-amber-50 px-4 py-2.5 text-center text-xs text-amber-800 shadow-xs"
+                  >
+                    <p className="font-medium">{message.content}</p>
+                    <span className="mt-1 block text-[10px] text-amber-600/80">
+                      {new Date(message.createdAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </span>
+                  </div>
+                );
+              }
+
+              return (
+                <div
+                  key={message.id}
+                  className={`flex flex-col ${isMe ? "items-end" : "items-start"}`}
+                >
+                  {!isMe && (
+                    <span className="mb-1 text-[11px] font-medium text-slate-500">
+                      {message.sender?.userName || "Team member"}
+                    </span>
+                  )}
+                  <div
+                    className={`max-w-md rounded-[12px] px-4 py-2.5 text-sm shadow-xs ${
+                      isMe
+                        ? "rounded-br-xs bg-amber-600 text-white"
+                        : "rounded-bl-xs border border-slate-200 bg-white text-slate-900"
+                    }`}
+                  >
+                    <p className="leading-relaxed whitespace-pre-wrap">
+                      {message.content}
+                    </p>
+                    <p
+                      className={`mt-1 text-[10px] text-right ${
+                        isMe ? "text-amber-100/80" : "text-slate-400"
+                      }`}
+                    >
+                      {new Date(message.createdAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                    </p>
+                  </div>
+                </div>
+              );
+            })
           )}
         </div>
         <form
