@@ -8,7 +8,7 @@ import {
   ClipboardCheck,
   FolderKanban,
   LogOut,
-  MessageSquare,
+  // MessageSquare,
   PanelLeft,
   FileText,
   ListTodo,
@@ -87,12 +87,12 @@ const navigation = [
     icon: CalendarHeart,
     roles: ["ADMIN", "SITE_MANAGER", "WORKER"],
   },
-  {
-    label: "Messages",
-    href: "/chat",
-    icon: MessageSquare,
-    roles: ["ADMIN", "SITE_MANAGER", "WORKER"],
-  },
+  // {
+  //   label: "Messages",
+  //   href: "/chat",
+  //   icon: MessageSquare,
+  //   roles: ["ADMIN", "SITE_MANAGER", "WORKER"],
+  // },
   {
     label: "Activity",
     href: "/activity",

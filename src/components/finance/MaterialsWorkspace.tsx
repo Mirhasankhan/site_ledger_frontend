@@ -58,13 +58,21 @@ const materialSchema = z.object({
   supplier: z.string().optional(),
   location: z.string().optional(),
 });
-const movementSchema = z.object({
+const purchaseSchema = z.object({
   quantity: z
     .string()
     .refine((value) => Number(value) > 0, "Quantity must be positive"),
-  unitCost: z.string().optional(),
+  unitCost: z
+    .string()
+    .refine((value) => Number(value) > 0, "Unit cost must be positive"),
   supplier: z.string().optional(),
-  projectId: z.string().optional(),
+  date: z.string().optional(),
+});
+const usageSchema = z.object({
+  projectId: z.string().min(1, "Please choose a project"),
+  quantity: z
+    .string()
+    .refine((value) => Number(value) > 0, "Quantity must be positive"),
   date: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -109,7 +117,8 @@ export default function MaterialsWorkspace({
   const [reviewRequest, { isLoading: reviewing }] =
     useReviewMaterialRequestMutation();
   const [showMaterialForm, setShowMaterialForm] = useState(false);
-  const [selectedMaterial, setSelectedMaterial] = useState("");
+  const [selectedPurchaseMaterial, setSelectedPurchaseMaterial] = useState("");
+  const [selectedUsageMaterial, setSelectedUsageMaterial] = useState("");
   const [actionError, setActionError] = useState("");
   const {
     register: registerMaterial,
@@ -127,13 +136,34 @@ export default function MaterialsWorkspace({
     },
   });
   const {
-    register: registerMovement,
-    handleSubmit: submitMovement,
-    reset: resetMovement,
-    setError: movementError,
-    formState: { errors: movementErrors },
-  } = useForm<z.infer<typeof movementSchema>>({
-    resolver: zodResolver(movementSchema),
+    register: registerPurchase,
+    handleSubmit: submitPurchase,
+    reset: resetPurchase,
+    setError: purchaseError,
+    formState: { errors: purchaseErrors },
+  } = useForm<z.infer<typeof purchaseSchema>>({
+    resolver: zodResolver(purchaseSchema),
+    defaultValues: {
+      quantity: "",
+      unitCost: "",
+      supplier: "",
+      date: "",
+    },
+  });
+  const {
+    register: registerUsage,
+    handleSubmit: submitUsage,
+    reset: resetUsage,
+    setError: usageError,
+    formState: { errors: usageErrors },
+  } = useForm<z.infer<typeof usageSchema>>({
+    resolver: zodResolver(usageSchema),
+    defaultValues: {
+      projectId: "",
+      quantity: "",
+      date: "",
+      notes: "",
+    },
   });
   const {
     register: registerRequest,
@@ -167,11 +197,11 @@ export default function MaterialsWorkspace({
       });
     }
   };
-  const onPurchase = async (values: z.infer<typeof movementSchema>) => {
-    if (!selectedMaterial) return;
+  const onPurchase = async (values: z.infer<typeof purchaseSchema>) => {
+    if (!selectedPurchaseMaterial) return;
     try {
       await purchase({
-        id: selectedMaterial,
+        id: selectedPurchaseMaterial,
         body: {
           quantity: Number(values.quantity),
           unitCost: Number(values.unitCost),
@@ -179,18 +209,18 @@ export default function MaterialsWorkspace({
           date: values.date || undefined,
         },
       }).unwrap();
-      resetMovement();
+      resetPurchase();
     } catch (error) {
-      movementError("root", {
+      purchaseError("root", {
         message: errorMessage(error, "Purchase could not be recorded."),
       });
     }
   };
-  const onUsage = async (values: z.infer<typeof movementSchema>) => {
-    if (!selectedMaterial || !values.projectId) return;
+  const onUsage = async (values: z.infer<typeof usageSchema>) => {
+    if (!selectedUsageMaterial || !values.projectId) return;
     try {
       await usage({
-        id: selectedMaterial,
+        id: selectedUsageMaterial,
         body: {
           projectId: values.projectId,
           quantityUsed: Number(values.quantity),
@@ -198,15 +228,15 @@ export default function MaterialsWorkspace({
           notes: values.notes || undefined,
         },
       }).unwrap();
-      resetMovement();
+      resetUsage();
       setActionError("");
     } catch (error) {
-      setActionError(
-        errorMessage(
-          error,
-          "Usage could not be recorded. Check current stock and project access.",
-        ),
+      const msg = errorMessage(
+        error,
+        "Usage could not be recorded. Check current stock and project access.",
       );
+      setActionError(msg);
+      usageError("root", { message: msg });
     }
   };
   const onRequest = async (values: z.infer<typeof requestSchema>) => {
@@ -445,11 +475,16 @@ export default function MaterialsWorkspace({
                     <select
                       className="form-input"
                       value={
-                        selectedMaterial === material.id ? material.id : ""
+                        selectedPurchaseMaterial === material.id ||
+                        selectedUsageMaterial === material.id
+                          ? material.id
+                          : ""
                       }
-                      onChange={(event) =>
-                        setSelectedMaterial(event.target.value)
-                      }
+                      onChange={(event) => {
+                        const val = event.target.value;
+                        setSelectedPurchaseMaterial(val);
+                        setSelectedUsageMaterial(val);
+                      }}
                     >
                       <option value="">Manage...</option>
                       <option value={material.id}>Use selected below</option>
@@ -465,14 +500,16 @@ export default function MaterialsWorkspace({
         <>
           <section className="grid gap-5 lg:grid-cols-2">
             <form
-              onSubmit={submitMovement(onPurchase)}
+              onSubmit={submitPurchase(onPurchase)}
               className="card-surface rounded-[9px] p-5"
             >
               <h2 className="font-semibold">Record purchase</h2>
               <select
                 className="form-input mt-4"
-                value={selectedMaterial}
-                onChange={(event) => setSelectedMaterial(event.target.value)}
+                value={selectedPurchaseMaterial}
+                onChange={(event) =>
+                  setSelectedPurchaseMaterial(event.target.value)
+                }
               >
                 <option value="">Select material</option>
                 {materials.map((material: any) => (
@@ -482,38 +519,56 @@ export default function MaterialsWorkspace({
                 ))}
               </select>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <input
-                  className="form-input"
-                  type="number"
-                  placeholder="Quantity"
-                  {...registerMovement("quantity")}
-                />
-                <input
-                  className="form-input"
-                  type="number"
-                  placeholder="Unit cost"
-                  {...registerMovement("unitCost")}
-                />
-                <input
-                  className="form-input"
-                  placeholder="Supplier"
-                  {...registerMovement("supplier")}
-                />
-                <input
-                  className="form-input"
-                  type="date"
-                  placeholder="Select purchase date"
-                  {...registerMovement("date")}
-                />
+                <div>
+                  <input
+                    className="form-input"
+                    type="number"
+                    placeholder="Quantity"
+                    {...registerPurchase("quantity")}
+                  />
+                  {purchaseErrors.quantity && (
+                    <p className="form-error">
+                      {purchaseErrors.quantity.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <input
+                    className="form-input"
+                    type="number"
+                    placeholder="Unit cost"
+                    {...registerPurchase("unitCost")}
+                  />
+                  {purchaseErrors.unitCost && (
+                    <p className="form-error">
+                      {purchaseErrors.unitCost.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <input
+                    className="form-input"
+                    placeholder="Supplier"
+                    {...registerPurchase("supplier")}
+                  />
+                </div>
+                <div>
+                  <input
+                    className="form-input"
+                    type="date"
+                    placeholder="Select purchase date"
+                    {...registerPurchase("date")}
+                  />
+                </div>
               </div>
-              {movementErrors.root && (
+              {purchaseErrors.root && (
                 <p className="mt-3 text-sm text-red-700">
-                  {movementErrors.root.message}
+                  {purchaseErrors.root.message}
                 </p>
               )}
               <button
                 className="btn-primary mt-4"
-                disabled={!selectedMaterial || purchasing}
+                disabled={!selectedPurchaseMaterial || purchasing}
                 type="submit"
               >
                 <PackagePlus size={17} />
@@ -521,14 +576,16 @@ export default function MaterialsWorkspace({
               </button>
             </form>
             <form
-              onSubmit={submitMovement(onUsage)}
+              onSubmit={submitUsage(onUsage)}
               className="card-surface rounded-[9px] p-5"
             >
               <h2 className="font-semibold">Log usage</h2>
               <select
                 className="form-input mt-4"
-                value={selectedMaterial}
-                onChange={(event) => setSelectedMaterial(event.target.value)}
+                value={selectedUsageMaterial}
+                onChange={(event) =>
+                  setSelectedUsageMaterial(event.target.value)
+                }
               >
                 <option value="">Select material</option>
                 {materials.map((material: any) => (
@@ -538,41 +595,59 @@ export default function MaterialsWorkspace({
                 ))}
               </select>
               <div className="mt-4 grid gap-4 sm:grid-cols-2">
-                <input
-                  className="form-input"
-                  type="number"
-                  placeholder="Quantity used"
-                  {...registerMovement("quantity")}
-                />
-                <select
-                  className="form-input"
-                  {...registerMovement("projectId")}
-                >
-                  <option value="">Project</option>
-                  {projects.map((project: any) => (
-                    <option key={project.id} value={project.id}>
-                      {project.projectName}
-                    </option>
-                  ))}
-                </select>
-                <input
-                  className="form-input"
-                  type="date"
-                  placeholder="Select usage date"
-                  {...registerMovement("date")}
-                />
-                <input
-                  className="form-input"
-                  placeholder="Usage note"
-                  {...registerMovement("notes")}
-                />
+                <div>
+                  <input
+                    className="form-input"
+                    type="number"
+                    placeholder="Quantity used"
+                    {...registerUsage("quantity")}
+                  />
+                  {usageErrors.quantity && (
+                    <p className="form-error">{usageErrors.quantity.message}</p>
+                  )}
+                </div>
+                <div>
+                  <select
+                    className="form-input"
+                    {...registerUsage("projectId")}
+                  >
+                    <option value="">Project</option>
+                    {projects.map((project: any) => (
+                      <option key={project.id} value={project.id}>
+                        {project.projectName}
+                      </option>
+                    ))}
+                  </select>
+                  {usageErrors.projectId && (
+                    <p className="form-error">
+                      {usageErrors.projectId.message}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <input
+                    className="form-input"
+                    type="date"
+                    placeholder="Select usage date"
+                    {...registerUsage("date")}
+                  />
+                </div>
+                <div>
+                  <input
+                    className="form-input"
+                    placeholder="Usage note"
+                    {...registerUsage("notes")}
+                  />
+                </div>
               </div>
-              {actionError && (
-                <p className="mt-3 text-sm text-red-700">{actionError}</p>
+              {(actionError || usageErrors.root) && (
+                <p className="mt-3 text-sm text-red-700">
+                  {usageErrors.root?.message || actionError}
+                </p>
               )}
               <button
                 className="btn-primary mt-4"
-                disabled={!selectedMaterial || using}
+                disabled={!selectedUsageMaterial || using}
                 type="submit"
               >
                 <Send size={17} />
