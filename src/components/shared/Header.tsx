@@ -30,7 +30,7 @@ const Header = () => {
                         href="/"
                         className="flex text-green-600 text-xl md:text-3xl font-bold items-center gap-2"
                     >
-                        <span className="tracking-wide">Flowboard</span>
+                        <span className="tracking-wide">SiteLedger</span>
                     </Link>
 
                     {/* User Profile & Edit Option */}
